@@ -1,0 +1,59 @@
+:root {
+  --ink: #000000;
+  --muted: #6b6b6b;
+  --rule: #d9d9d9;
+  --paper: #ffffff;
+  --card: #f6f7f9;
+  --link: #1a4fb4;
+  --kw: #8a2a8a;
+  --ty: #1a4fb4;
+  --st: #2a6b2a;
+  --nu: #b3541e;
+  --cm: #7a7a7a;
+  --sans: "Inter", -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+* { box-sizing: border-box; }
+html { font-size: 16px; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--sans);
+  font-feature-settings: "cv11", "ss01";
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+a:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+h1, h2, h3 { font-weight: 600; line-height: 1.2; margin: 0; }
+h1 { font-size: 2.25rem; font-weight: 650; letter-spacing: -0.025em; }
+h2 { font-size: 0.8rem; color: var(--muted); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 0.75rem; }
+p { margin: 0 0 1rem; }
+dl { margin: 0; }
+dt { font-weight: 600; }
+dd { margin: 0.2rem 0 0.9rem; }
+@media (max-width: 900px) {
+  html { font-size: 16px; }
+  h1 { font-size: 2rem; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

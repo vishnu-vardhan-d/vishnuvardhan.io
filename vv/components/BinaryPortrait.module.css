@@ -1,0 +1,21 @@
+.portrait {
+  margin: 0 0 1.5rem;
+  font-family: var(--mono);
+  font-size: 0.5rem;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  color: #9a9a9a;
+  contain: content;
+  user-select: none;
+  white-space: pre;
+  overflow: hidden;
+}
+.cursor { color: var(--link); }
+@media (max-width: 900px) {
+  .portrait { font-size: 0.42rem; }
+}
+.t0 { color: #2b2b2b; }
+.t1 { color: #6a6a6a; }
+.t2 { color: #a3a3a3; }
+.t3 { color: #cfcfcf; }
+.pending { visibility: hidden; }

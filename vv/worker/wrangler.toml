@@ -1,0 +1,9 @@
+name = "vishnuvardhan-visits"
+main = "visits.js"
+compatibility_date = "2026-01-01"
+
+# Create the namespace once:  npx wrangler kv namespace create VISITS
+# then paste the id it prints below.
+[[kv_namespaces]]
+binding = "VISITS"
+id = "PASTE_KV_NAMESPACE_ID_HERE"

@@ -1,0 +1,29 @@
+.card {
+  margin: 1.75rem 0 0;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.caption {
+  font-weight: 500;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.pre {
+  margin: 0;
+  padding: 1.1rem 1.25rem 1.2rem;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+.kw { color: var(--kw); }
+.ty { color: var(--ty); }
+.st { color: var(--st); }
+.nu { color: var(--nu); }
+.cm { color: var(--cm); }
+.an { color: #8a5a00; font-weight: 500; }
