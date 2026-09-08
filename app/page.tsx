@@ -1,3 +1,5 @@
+import Image from "next/image";
+import portrait from "@/public/assets/portrait.png";
 import styles from "./page.module.css";
 import CodeCard from "@/components/CodeCard";
 import Timeline from "@/components/Timeline";
@@ -8,8 +10,7 @@ export default function Home() {
   return (
     <main className={styles.page}>
       <aside className={styles.aside}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className={styles.photo} src="/assets/portrait.png" alt="Vishnu Vardhan" width={160} height={160} />
+        <Image className={styles.photo} src={portrait} alt="Vishnu Vardhan" width={160} height={160} priority />
         <h1>{profile.name}</h1>
         <p className={styles.role}>{profile.tagline}</p>
         <nav className={styles.links} aria-label="Profiles">
