@@ -26,7 +26,6 @@ jobs:
       - run: npm ci
       - run: npm run build
         env:
-          NEXT_PUBLIC_BASE_PATH: /vishnuvardhan.io
           NEXT_PUBLIC_VISITS_URL: ${{ vars.NEXT_PUBLIC_VISITS_URL }}
       - uses: actions/upload-pages-artifact@v3
         with:
