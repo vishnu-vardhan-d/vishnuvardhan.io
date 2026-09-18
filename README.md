@@ -139,12 +139,12 @@ apex needs A records and `www` does not. On Cloudflare, set these to **DNS only*
 orange-cloud proxy interferes with certificate issuance — and set SSL/TLS to **Full**, not Flexible,
 which would loop.
 
-![Cloudflare DNS records: four A records on the apex and a www CNAME, all set to DNS only](docs/cloudflare-dns.png)
+
 
 **5. Finish.** Settings → Pages → Custom domain → enter the domain → Save, wait for the DNS check to
 pass, then tick **Enforce HTTPS** once GitHub has issued the certificate (minutes, sometimes an hour).
 
-![GitHub Pages settings: source set to GitHub Actions, custom domain entered, DNS check successful](docs/pages-settings.png)
+
 
 ## Symptom table
 
@@ -156,12 +156,3 @@ pass, then tick **Enforce HTTPS** once GitHub has issued the certificate (minute
 | Redirect loop | TLS | Cloudflare SSL/TLS set to Flexible; use Full |
 | Certificate warning | TLS | wait for issuance, then enable Enforce HTTPS |
 
-## Optional: visit counter
-
-The count under the location comes from a Cloudflare Worker in `worker/`.
-
-1. `cd worker && npx wrangler kv namespace create VISITS` — paste the id into `wrangler.toml`.
-2. `npx wrangler deploy` — note the worker URL.
-3. Add repo variable `NEXT_PUBLIC_VISITS_URL` (Settings → Secrets and variables → Actions → Variables).
-
-Without the variable the counter simply does not render.
