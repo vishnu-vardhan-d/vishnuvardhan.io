@@ -19,7 +19,7 @@ export type Entry = { when: string; title: string; org: string; body?: string };
 export const work: Entry[] = [
   {
     when: "2021 – Current",
-    title: "Ness",
+    title: "Deloitte",
     org: "Senior Solutions Engineer",
     body: "Lead developer on a statewide healthcare and benefits platform. I own change requests end to end, from requirements with policy teams to production release. I own the three annual federal policy cycles that re-evaluate every active case. I re-engineered the nightly interface chain to federal and partner systems and restored reliable overnight windows.",
   },
