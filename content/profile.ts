@@ -11,6 +11,7 @@ export const profile = {
 };
 
 export type Project = {
+  date: string; // TODO: confirm real start dates
   name: string;
   summary: string;
   links: { label: string; href: string }[];
@@ -18,19 +19,13 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    name: "RaastaPay",
-    summary: "An AI advisory platform for small trucking operators in\u00A0India.",
-    links: [
-      { label: "Website", href: "https://raastapay.in" },
-      { label: "Docs", href: "https://raastapay.in/docs" },
-    ],
-  },
-  {
+    date: "Soon",
     name: "KanbanAssist",
     summary: "An AI assistant that finds similar past tickets and drafts a root-cause\u00A0summary.",
     links: [],
   },
   {
+    date: "Mar 2026",
     name: "jamna.nn",
     summary: "A small transformer language model, built from scratch in pure\u00A0Java.",
     links: [
@@ -39,9 +34,19 @@ export const projects: Project[] = [
     ],
   },
   {
+    date: "Nov 2025",
     name: "options-wall-street",
     summary: "Personal tooling for options\u00A0analysis.",
     links: [{ label: "GitHub", href: "https://github.com/vishnu-vardhan-d/options-wall-street" }],
+  },
+  {
+    date: "2023",
+    name: "RaastaPay",
+    summary: "An AI advisory platform for small trucking operators in\u00A0India.",
+    links: [
+      { label: "Website", href: "https://raastapay.in" },
+      { label: "Docs", href: "https://raastapay.in/docs" },
+    ],
   },
 ];
 

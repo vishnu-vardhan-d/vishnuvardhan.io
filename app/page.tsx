@@ -4,7 +4,7 @@ import portrait from "@/public/assets/portrait.png";
 import styles from "./page.module.css";
 import VisitCounter from "@/components/VisitCounter";
 import SocialIcons from "@/components/SocialIcons";
-import { profile, projects, articles, watches, principles } from "@/content/profile";
+import { profile, projects, articles, watches } from "@/content/profile";
 
 export default function Home() {
   return (
@@ -20,6 +20,7 @@ export default function Home() {
           <Image className={styles.photo} src={portrait} alt="Vishnu Vardhan" width={240} height={240} priority />
           <div className={styles.identity}>
             <h1 className={styles.name}>{profile.name}</h1>
+            <p className={styles.title}>Software Engineer</p>
             <p className={styles.role}>{profile.tagline}</p>
             <SocialIcons links={profile.links} />
           </div>
@@ -47,50 +48,40 @@ export default function Home() {
           </p>
         </section>
 
-        <section>
-          <h2>How I Approach System Design</h2>
-          <ol className={styles.steps}>
-            {principles.map((p) => (
-              <li key={p}>{p}</li>
-            ))}
-          </ol>
-        </section>
 
         <section>
           <h2>Projects</h2>
-          <dl>
+          <div className={styles.tl}>
             {projects.map((p) => (
-              <div key={p.name}>
-                <dt>
-                  {p.name}
-                  {p.links.length > 0 ? (
-                    p.links.map((l) => (
+              <div className={styles.tlRow} key={p.name}>
+                <div className={styles.tlDate}>{p.date}</div>
+                <div className={styles.tlBody}>
+                  <div className={styles.tlTitle}>
+                    <b>{p.name}</b>
+                    {p.links.map((l) => (
                       <a key={l.href} className={styles.projLink} href={l.href}>{l.label}</a>
-                    ))
-                  ) : (
-                    <span className={styles.date}>Coming soon</span>
-                  )}
-                </dt>
-                <dd>{p.summary}</dd>
+                    ))}
+                  </div>
+                  <p>{p.summary}</p>
+                </div>
               </div>
             ))}
-          </dl>
+          </div>
         </section>
 
         <section>
           <h2>Articles</h2>
-          {articles.length === 0 ? (
-            <p>First articles on Spring AI and system design are on the&nbsp;way.</p>
-          ) : (
-            <dl>
-              {articles.map((a) => (
-                <div key={a.href}>
-                  <dt><a href={a.href}>{a.title}</a> <span className={styles.date}>{a.date}</span></dt>
-                  <dd>{a.summary}</dd>
+          <div className={styles.tl}>
+            {articles.map((a) => (
+              <div className={styles.tlRow} key={a.href}>
+                <div className={styles.tlDate}>{a.date}</div>
+                <div className={styles.tlBody}>
+                  <div className={styles.tlTitle}><a href={a.href}>{a.title}</a></div>
+                  <p>{a.summary}</p>
                 </div>
-              ))}
-            </dl>
-          )}
+              </div>
+            ))}
+          </div>
         </section>
 
         <section>

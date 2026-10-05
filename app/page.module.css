@@ -78,7 +78,7 @@
   .content { padding-top: 2rem; gap: 2.25rem; }
 }
 .watches { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
-.principles { margin: 0.5rem 0 1rem; }
+.title { margin: 0.2rem 0 0; font-size: 1.05rem; color: #555; }
 .subhead { font-size: 1.05rem; font-weight: 600; margin: 0 0 0.6rem; }
 
 /* Case studies: one card per project, flow drawn as connected steps. */
@@ -104,3 +104,23 @@
 .steps li::marker { color: var(--muted); font-weight: 600; }
 .belief { font-size: 1.15rem; font-weight: 600; margin: 0 0 1.5rem; }
 .projLink { margin-left: 0.75rem; font-size: 0.85rem; font-weight: 400; }
+
+/* Timeline: grey dated rail used by Articles and Projects. */
+.tl { display: flex; flex-direction: column; }
+.tlRow { display: grid; grid-template-columns: 5rem minmax(0, 1fr); }
+.tlDate { font-size: 0.875rem; color: #a3a3a3; text-align: right; padding: 0.15rem 1rem 0 0; white-space: nowrap; }
+.tlBody { position: relative; border-left: 2px solid #cfcfcf; padding: 0 0 1.6rem 1.25rem; }
+.tlRow:last-child .tlBody { padding-bottom: 0.4rem; }
+.tlBody::before {
+  content: "";
+  position: absolute;
+  top: 0.3rem;
+  left: -8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #cfcfcf;
+  border: 2px solid var(--paper);
+}
+.tlTitle { font-size: 1.1rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0; }
+.tlBody p { margin: 0.25rem 0 0; color: #555; }
