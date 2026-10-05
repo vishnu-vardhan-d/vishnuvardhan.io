@@ -57,3 +57,6 @@ dd { margin: 0.2rem 0 0.9rem; }
   h1 { font-size: 2rem; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+p { text-wrap: pretty; }
+dd { text-wrap: balance; }

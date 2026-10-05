@@ -1,39 +1,106 @@
-/* Desktop: two columns. Left column is sticky identity; right column scrolls. */
-.page {
-  max-width: 76rem;
-  margin-inline: auto;
-  padding: 4.5rem 3rem 5rem;
-  display: grid;
-  grid-template-columns: minmax(24rem, 30rem) minmax(0, 1fr);
-  column-gap: 4rem;
-  align-items: start;
+
+/* Header: centered row with a large round photo and the name beside it, ruled off below. */
+.header {
+  position: relative;
+  border-bottom: 1px solid var(--rule);
+  padding: 1.5rem 1.25rem;
 }
-.aside {
-  position: sticky;
-  top: 4.5rem;
+.location {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.location svg { width: 14px; height: 14px; fill: currentColor; }
+.headerInner {
+  max-width: 46rem;
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
 }
 .photo {
   display: block;
-  width: 160px;
-  height: 160px;
+  width: 240px;
+  height: 240px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 1.5rem;
+  flex-shrink: 0;
 }
-.role { margin: 0.5rem 0 1rem; font-size: 1.05rem; color: #333; }
-.links { display: flex; flex-wrap: wrap; gap: 1.25rem; font-size: 0.95rem; }
-.cv { margin-top: 1.5rem; color: var(--muted); font-size: 0.95rem; }
-.content { display: flex; flex-direction: column; gap: 2.75rem; }
+.identity { max-width: none; }
+.name { font-size: 2.25rem; font-weight: 400; letter-spacing: -0.01em; color: #333; }
+.role {
+  margin: 0.75rem 0 0;
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--muted);
+  line-height: 1.5;
+  white-space: nowrap;
+}
 
-/* Tablet & mobile: single column, identity on top, no sticky. */
-@media (max-width: 900px) {
-  .page {
-    grid-template-columns: 1fr;
-    row-gap: 2.5rem;
-    padding: 2.5rem 1.25rem 4rem;
-  }
-  .aside { position: static; }
-  .photo { width: 120px; height: 120px; margin-bottom: 1rem; }
-  .content { gap: 2.25rem; }
+/* Body: one centered reading column. */
+.content {
+  max-width: 46rem;
+  margin-inline: auto;
+  padding: 3rem 1.25rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
 }
-.contrib { color: var(--muted); font-size: 0.95rem; margin-top: 0.5rem; }
+.footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  border-top: 1px solid var(--rule);
+  padding-top: 1.5rem;
+}
+.footer p { margin: 0; }
+.date { margin-left: 0.5rem; color: var(--muted); font-size: 0.85rem; font-weight: 400; }
+
+/* Phones: stack the header and center it. */
+@media (max-width: 600px) {
+  .location { position: static; justify-content: center; width: 100%; margin-bottom: 0.75rem; }
+  .headerInner { flex-direction: column; text-align: center; }
+  .photo { width: 160px; height: 160px; }
+  .identity { max-width: none; }
+  .role { white-space: normal; text-wrap: balance; }
+  .name { font-size: 2rem; }
+  .content { padding-top: 2rem; gap: 2.25rem; }
+}
+.watches { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.principles { margin: 0.5rem 0 1rem; }
+.subhead { font-size: 1.05rem; font-weight: 600; margin: 0 0 0.6rem; }
+
+/* Case studies: one card per project, flow drawn as connected steps. */
+.cases { display: flex; flex-direction: column; gap: 1.25rem; }
+.case { border: 1px solid var(--rule); border-radius: 8px; padding: 1.25rem 1.4rem; }
+.caseName { font-size: 1.15rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.6rem; margin-bottom: 0.6rem; }
+.status { font-size: 0.75rem; font-weight: 500; color: var(--muted); background: var(--card); border-radius: 999px; padding: 0.15rem 0.6rem; }
+.flow { list-style: none; margin: 0.25rem 0 1rem; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.flow li { font-family: var(--mono); font-size: 0.78rem; background: var(--card); border: 1px solid var(--rule); border-radius: 4px; padding: 0.25rem 0.55rem; }
+.flow li:not(:last-child)::after { content: "→"; margin-left: 0.55rem; color: var(--muted); font-family: var(--sans); }
+.decisions { margin: 0 0 0.9rem; padding-left: 1.1rem; }
+.decisions li { margin-bottom: 0.35rem; text-wrap: pretty; }
+.stack { margin: 0; font-family: var(--mono); font-size: 0.8rem; color: var(--muted); }
+
+/* Even out every line in body paragraphs so none ends on a short tail.
+   balance is supported in Chrome, Edge, Firefox and Safari; pretty refines it where available. */
+.content p { text-wrap: balance; }
+@supports (text-wrap: pretty) {
+  .content p { text-wrap: pretty; }
+}
+
+.steps { margin: 0; padding-left: 1.4rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 1.05rem; }
+.steps li::marker { color: var(--muted); font-weight: 600; }
+.belief { font-size: 1.15rem; font-weight: 600; margin: 0 0 1.5rem; }
+.projLink { margin-left: 0.75rem; font-size: 0.85rem; font-weight: 400; }

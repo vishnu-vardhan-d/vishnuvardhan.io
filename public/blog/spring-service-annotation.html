@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why @Service on a method won't compile · Vishnu Vardhan</title>
+<meta name="description" content="Spring from first principles: what a stereotype annotation really is, and what Spring does with it at startup.">
+<style>
+body{margin:0;background:#fff;color:#333;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6}
+a{color:#1A55A6}a:hover{color:#0E3A75}
+</style>
+</head>
+<body>
+<article style="max-width: 720px; margin: 0 auto; padding: 32px 20px 64px">
+<a href="/" style="font-size: 15px; text-decoration: none">← Vishnu Vardhan</a>
+<h1 style="margin: 36px 0 8px; font-size: 38px; line-height: 1.15; font-weight: normal; color: #222">Why @Service on a method won't compile</h1>
+<div style="font-size: 15px; color: #8C8C8C">August 2026 · Spring from first principles, part 1</div>
+
+<p style="margin: 32px 0 0">While wiring a Spring AI controller, I put <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Service</code> on a method. Eclipse refused before I could run anything:</p>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #FBF1F0; border: 1px solid #EBCFCB; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 14.5px; line-height: 1.55; color: #8A2A1E">The annotation @Service is disallowed for this location</pre>
+<p style="margin: 0">Spring hasn't started at this point, so this is the Java compiler talking. I'd used <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Service</code> for years without asking what it actually is. The answer is eight lines long, and it explains most of how Spring finds your classes.</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">1. An annotation declares where it's allowed</h2>
+<p style="margin: 0">This is <a href="https://github.com/spring-projects/spring-framework/blob/main/spring-context/src/main/java/org/springframework/stereotype/Service.java"><code style="font-family: Menlo, Consolas, monospace; font-size: 15px">Service.java</code></a> in the Spring Framework source:</p>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #F6F6F4; border: 1px solid #E6E6E2; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 14.5px; line-height: 1.6">@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Component
+public @interface Service {
+
+    @AliasFor(annotation = Component.class)
+    String value() default "";
+}</pre>
+<table style="margin: 8px 0 0; border-collapse: collapse; width: 100%; font-size: 16px">
+<tbody>
+<tr style="border-top: 1px solid #E6E6E2"><td style="padding: 12px 16px 12px 0; vertical-align: top; white-space: nowrap; font-family: Menlo, Consolas, monospace; font-size: 14.5px">@Target(TYPE)</td><td style="padding: 12px 0">Allowed on classes, interfaces, enums and records only. Methods aren't listed, so javac rejects the code. <b>This line is the error.</b></td></tr>
+<tr style="border-top: 1px solid #E6E6E2"><td style="padding: 12px 16px 12px 0; vertical-align: top; white-space: nowrap; font-family: Menlo, Consolas, monospace; font-size: 14.5px">@Retention(RUNTIME)</td><td style="padding: 12px 0">Kept in the <code style="font-family: Menlo, Consolas, monospace; font-size: 14.5px">.class</code> file. With <code style="font-family: Menlo, Consolas, monospace; font-size: 14.5px">SOURCE</code> it would be thrown away during compilation, and Spring would never see it.</td></tr>
+<tr style="border-top: 1px solid #E6E6E2; border-bottom: 1px solid #E6E6E2"><td style="padding: 12px 16px 12px 0; vertical-align: top; white-space: nowrap; font-family: Menlo, Consolas, monospace; font-size: 14.5px">@Component</td><td style="padding: 12px 0">An annotation <i>on an annotation</i>, called a meta-annotation. This is the entire mechanism behind Spring stereotypes.</td></tr>
+</tbody>
+</table>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">2. What Spring does with it at startup</h2>
+<p style="margin: 0">Take one class and follow it through the application context:</p>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #F6F6F4; border: 1px solid #E6E6E2; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 14.5px; line-height: 1.6">package com.example.advice;
+
+@Service
+public class OfferService {
+    OfferService(PricingRules rules) { ... }
+}</pre>
+
+<figure style="margin: 28px 0">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(124px, 100%), 1fr)); gap: 8px; font-size: 14px; line-height: 1.4">
+<div style="border: 1px solid #C9D6EA; background: #F3F7FC; border-radius: 4px; padding: 12px"><div style="color: #1A55A6; font-size: 13px">1 · scan</div><div style="margin-top: 4px">List every <code style="font-family: Menlo, Consolas, monospace">.class</code> under <code style="font-family: Menlo, Consolas, monospace">com/example/**</code></div></div>
+<div style="border: 1px solid #C9D6EA; background: #F3F7FC; border-radius: 4px; padding: 12px"><div style="color: #1A55A6; font-size: 13px">2 · read bytes</div><div style="margin-top: 4px">Read annotation metadata without loading the class</div></div>
+<div style="border: 1px solid #C9D6EA; background: #F3F7FC; border-radius: 4px; padding: 12px"><div style="color: #1A55A6; font-size: 13px">3 · match</div><div style="margin-top: 4px">Is <code style="font-family: Menlo, Consolas, monospace">@Component</code> present, directly or meta?</div></div>
+<div style="border: 1px solid #C9D6EA; background: #F3F7FC; border-radius: 4px; padding: 12px"><div style="color: #1A55A6; font-size: 13px">4 · register</div><div style="margin-top: 4px">Bean definition <code style="font-family: Menlo, Consolas, monospace">"offerService"</code></div></div>
+<div style="border: 1px solid #1A55A6; background: #1A55A6; color: #FFFFFF; border-radius: 4px; padding: 12px"><div style="font-size: 13px; color: #D6E2F3">5 · instantiate</div><div style="margin-top: 4px">Constructor called, <code style="font-family: Menlo, Consolas, monospace">PricingRules</code> injected</div></div>
+</div>
+<figcaption style="margin-top: 12px; text-align: center; font-size: 14px; color: #8C8C8C">From a class file on disk to a singleton bean</figcaption>
+</figure>
+
+<ol style="margin: 0; padding-left: 22px">
+<li style="margin-bottom: 10px"><b>Scan.</b> <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@SpringBootApplication</code> includes <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@ComponentScan</code> for its own package and everything below it. A <a href="https://github.com/spring-projects/spring-framework/blob/main/spring-context/src/main/java/org/springframework/context/annotation/ClassPathBeanDefinitionScanner.java"><code style="font-family: Menlo, Consolas, monospace; font-size: 15px">ClassPathBeanDefinitionScanner</code></a> resolves that package into a list of class files.</li>
+<li style="margin-bottom: 10px"><b>Read the bytes, not the class.</b> Each file's annotation metadata is read directly from its bytecode. Loading every class into the JVM just to inspect it would be slow, and it would run static initializers that have no business running at scan time.</li>
+<li style="margin-bottom: 10px"><b>Follow the meta-annotations.</b> The filter doesn't look for <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Service</code> at all. It asks "is <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Component</code> present, on the class or on any of its annotations?" <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Service</code> carries <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Component</code>, so the answer is yes.</li>
+<li style="margin-bottom: 10px"><b>Register a recipe.</b> Spring stores a bean <i>definition</i>: which class to build, its scope and its name. The name is the class name with a lowercase first letter, <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">offerService</code>. No object exists yet.</li>
+<li><b>Instantiate.</b> When the context refreshes, Spring resolves the constructor, finds a <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">PricingRules</code> bean to inject, creates the object and runs the post-processors. Now it's a bean.</li>
+</ol>
+<p style="margin: 20px 0 0">So <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Service</code> has no behavior of its own. It's <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Component</code> with a name that tells you which layer the class is in. And since the scanner works on classes, a method was never something it could pick up.</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">3. On a method, use @Bean</h2>
+<p style="margin: 0">If a <i>method</i> should produce a bean, that's the job of <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Bean</code>, whose <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Target</code> includes <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">METHOD</code>:</p>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #F6F6F4; border: 1px solid #E6E6E2; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 14.5px; line-height: 1.6">@Configuration
+public class AiConfig {
+
+    @Bean
+    ChatClient advisorClient(ChatClient.Builder builder) {
+        return builder.defaultSystem("You are a freight advisor.").build();
+    }
+}</pre>
+<p style="margin: 0">Now the recipe is "call <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">advisorClient()</code>". There's a subtlety: Spring subclasses a <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Configuration</code> class at runtime with CGLIB. If one <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Bean</code> method calls another, the call is intercepted and returns the existing singleton instead of building a second instance.</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">So why have stereotypes at all?</h2>
+<p style="margin: 0">If <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Service</code> is just <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Component</code>, why not use <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Component</code> everywhere?</p>
+<ul style="margin: 12px 0 0; padding-left: 22px">
+<li style="margin-bottom: 8px"><b>Intent you can target.</b> The name tells a reader which layer a class belongs to, and an aspect can target that layer, for example every <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Service</code>.</li>
+<li><b>Real behavior where it matters.</b> <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Repository</code> isn't only a label. A post-processor wraps those beans so that vendor-specific persistence exceptions are translated into Spring's <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">DataAccessException</code> hierarchy.</li>
+</ul>
+<p style="margin: 20px 0 0">One <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Target</code> line revealed the whole model. Annotations are metadata. Retention decides who gets to see them. Spring reads them from bytecode, and a stereotype is a meta-annotated <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Component</code>. The next part of this series follows what happens <i>after</i> step 5: post-processors, proxies, and why <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">@Transactional</code> does nothing when a method calls another method on the same object.</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">Source</h2>
+<ul style="margin: 0; padding-left: 22px">
+<li><a href="https://github.com/spring-projects/spring-framework/blob/main/spring-context/src/main/java/org/springframework/stereotype/Service.java">stereotype/Service.java</a> on GitHub</li>
+<li><a href="https://github.com/spring-projects/spring-framework/blob/main/spring-context/src/main/java/org/springframework/context/annotation/ClassPathBeanDefinitionScanner.java">ClassPathBeanDefinitionScanner.java</a> on GitHub</li>
+</ul>
+</article>
+</body>
+</html>

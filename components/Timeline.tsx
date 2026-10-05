@@ -1,5 +1,5 @@
 import styles from "./Timeline.module.css";
-import type { Entry } from "@/content/profile";
+export type Entry = { when: string; title: string; org: string; body?: string };
 
 export default function Timeline({ entries }: { entries: Entry[] }) {
   return (

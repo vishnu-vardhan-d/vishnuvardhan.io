@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attention in pure Java, with real numbers · Vishnu Vardhan</title>
+<meta name="description" content="The attention formula from Attention Is All You Need, computed by hand for three tokens and then written as one Java method.">
+<style>
+body{margin:0;background:#fff;color:#333;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6}
+a{color:#1A55A6}a:hover{color:#0E3A75}
+</style>
+</head>
+<body>
+<article style="max-width: 720px; margin: 0 auto; padding: 32px 20px 64px">
+<a href="/" style="font-size: 15px; text-decoration: none">← Vishnu Vardhan</a>
+<h1 style="margin: 36px 0 8px; font-size: 38px; line-height: 1.15; font-weight: normal; color: #222">Attention in pure Java, with real numbers</h1>
+<div style="font-size: 15px; color: #8C8C8C">July 2026 · LLM internals · code: <a href="https://github.com/vishnu-vardhan-d/jamna.nn">jamna.nn</a> · <a href="https://vishnu-vardhan-d.github.io/jamna.nn/">docs</a></div>
+
+<p style="margin: 32px 0 0">I built <a href="https://github.com/vishnu-vardhan-d/jamna.nn">jamna.nn</a>, a small transformer in Java with no libraries, not even for math, because I wanted to see every number a language model computes. Everything in a transformer serves one line from <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a>:</p>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #F6F6F4; border: 1px solid #E6E6E2; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 15px; line-height: 1.55; text-align: center">Attention(Q, K, V) = softmax( Q·Kᵀ / √d ) · V</pre>
+<p style="margin: 0">Formulas like this are easy to nod along to and hard to really understand. So let's run it on three tokens, with 2-dimensional vectors, until every number has a reason.</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">1. Each token gets three roles</h2>
+<p style="margin: 0">A token's embedding is multiplied by three learned weight matrices, W<sub>Q</sub>, W<sub>K</sub> and W<sub>V</sub>, giving three vectors with three jobs:</p>
+<ul style="margin: 12px 0; padding-left: 22px">
+<li><b>query</b>: what this token is looking for</li>
+<li><b>key</b>: what this token offers to others</li>
+<li><b>value</b>: what it passes on if it gets chosen</li>
+</ul>
+<p style="margin: 0">With small hand-picked weights, our three tokens become:</p>
+<table style="margin: 20px 0; border-collapse: collapse; font-family: Menlo, Consolas, monospace; font-size: 15px; width: 100%">
+<thead><tr style="color: #8C8C8C; text-align: left"><th style="padding: 6px 12px 6px 0; font-weight: normal; border-bottom: 1px solid #DDD"></th><th style="padding: 6px 12px; font-weight: normal; border-bottom: 1px solid #DDD">query q</th><th style="padding: 6px 12px; font-weight: normal; border-bottom: 1px solid #DDD">key k</th><th style="padding: 6px 12px; font-weight: normal; border-bottom: 1px solid #DDD">value v</th></tr></thead>
+<tbody>
+<tr><td style="padding: 6px 12px 6px 0; color: #8C8C8C">token 1</td><td style="padding: 6px 12px">[1.0, 0.5]</td><td style="padding: 6px 12px">[1.0, 0.0]</td><td style="padding: 6px 12px">[0.5, 1.0]</td></tr>
+<tr><td style="padding: 6px 12px 6px 0; color: #8C8C8C">token 2</td><td style="padding: 6px 12px">[0.0, 1.0]</td><td style="padding: 6px 12px">[0.5, 1.0]</td><td style="padding: 6px 12px">[1.0, 0.0]</td></tr>
+<tr><td style="padding: 6px 12px 6px 0; color: #8C8C8C">token 3</td><td style="padding: 6px 12px">[1.0, 1.5]</td><td style="padding: 6px 12px">[1.5, 1.0]</td><td style="padding: 6px 12px">[1.5, 1.0]</td></tr>
+</tbody>
+</table>
+<p style="margin: 0">Why three separate vectors and not one? Because "what I'm looking for" and "what I contain" are different questions. A verb looks for its subject, but it doesn't <i>offer</i> itself as a subject. Separate matrices let the model learn the two independently.</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">2. Score: how well does each key answer token 1's query?</h2>
+<p style="margin: 0">A dot product is large when two vectors point the same way, so it measures "match":</p>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #F6F6F4; border: 1px solid #E6E6E2; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 14.5px; line-height: 1.6">q₁·k₁ = 1.0×1.0 + 0.5×0.0 = 1.0
+q₁·k₂ = 1.0×0.5 + 0.5×1.0 = 1.0
+q₁·k₃ = 1.0×1.5 + 0.5×1.0 = 2.0</pre>
+<p style="margin: 0">Token 3's key matches best. Note that token 1 also scores itself. Attention is not "look at the others", it's "look at everyone, including me".</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">3. Scale by √d, the step everyone skips</h2>
+<p style="margin: 0">Here d = 2, so √d ≈ 1.414 and the scores become <b>[0.707, 0.707, 1.414]</b>.</p>
+<p style="margin: 16px 0 0">Why? If each component of q and k has variance about 1, their dot product is a sum of d such terms, so its variance is about <b>d</b>. In a real model with d = 64 per head, raw scores easily reach ±15. Feed that to softmax and almost all of the weight lands on one token, the other weights are close to zero, and so are their gradients. The model stops learning which other tokens matter. Dividing by √d brings the variance back to about 1, so softmax stays in its useful range.</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">4. Softmax: scores become a probability split</h2>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #F6F6F4; border: 1px solid #E6E6E2; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 14.5px; line-height: 1.6">e^0.707 = 2.028    e^0.707 = 2.028    e^1.414 = 4.113
+                                     sum = 8.169
+
+weights = [2.028/8.169, 2.028/8.169, 4.113/8.169]
+        = [0.248, 0.248, 0.503]</pre>
+<p style="margin: 0">The exponential makes every weight positive and stretches differences: a score gap of 0.707 became a 2× difference in weight. Doing the same for all three tokens gives the full attention matrix. Each row is one token deciding where to look:</p>
+
+<figure style="margin: 24px 0">
+<table style="border-collapse: separate; border-spacing: 4px; font-family: Menlo, Consolas, monospace; font-size: 15px; margin: 0 auto">
+<thead><tr style="color: #8C8C8C"><th style="font-weight: normal; padding: 0 10px"></th><th style="font-weight: normal; padding: 4px 0">→ token 1</th><th style="font-weight: normal; padding: 4px 0">→ token 2</th><th style="font-weight: normal; padding: 4px 0">→ token 3</th></tr></thead>
+<tbody>
+<tr><td style="color: #8C8C8C; padding: 0 10px; text-align: right">token 1</td><td style="width: 96px; height: 52px; text-align: center; background: #D6E2F3; color: #1D2B44">0.248</td><td style="width: 96px; text-align: center; background: #D6E2F3; color: #1D2B44">0.248</td><td style="width: 96px; text-align: center; background: #6E93CC; color: #FFFFFF">0.503</td></tr>
+<tr><td style="color: #8C8C8C; padding: 0 10px; text-align: right">token 2</td><td style="height: 52px; text-align: center; background: #E1E9F6; color: #1D2B44">0.198</td><td style="text-align: center; background: #A9C0E3; color: #1D2B44">0.401</td><td style="text-align: center; background: #A9C0E3; color: #1D2B44">0.401</td></tr>
+<tr><td style="color: #8C8C8C; padding: 0 10px; text-align: right">token 3</td><td style="height: 52px; text-align: center; background: #EBF0F8; color: #1D2B44">0.140</td><td style="text-align: center; background: #C7D6EE; color: #1D2B44">0.284</td><td style="text-align: center; background: #3F6EB5; color: #FFFFFF">0.576</td></tr>
+</tbody>
+</table>
+<figcaption style="margin-top: 12px; text-align: center; font-size: 14px; color: #8C8C8C">The attention matrix. Every row sums to 1. Darker cells mean more attention.</figcaption>
+</figure>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">5. Blend the values</h2>
+<p style="margin: 0">Token 1's new vector is the weighted sum of everyone's values:</p>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #F6F6F4; border: 1px solid #E6E6E2; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 14.5px; line-height: 1.6">0.248 × [0.5, 1.0] = [0.124, 0.248]
+0.248 × [1.0, 0.0] = [0.248, 0.000]
+0.503 × [1.5, 1.0] = [0.755, 0.503]
+                     ---------------
+new token 1        = [1.127, 0.751]</pre>
+<p style="margin: 0">That's all attention is. Token 1 started as [0.5, 1.0] and is rewritten as a mix in which half the content comes from token 3. Stack many layers of this, each with many heads, and you have the mechanism that lets a word's meaning depend on its context.</p>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">The same thing in Java</h2>
+<pre style="margin: 20px 0; padding: 16px 18px; background: #F6F6F4; border: 1px solid #E6E6E2; border-radius: 4px; overflow-x: auto; font-family: Menlo, Consolas, monospace; font-size: 13.5px; line-height: 1.6">static double[] attend(double[] q, double[][] keys, double[][] values) {
+    int n = keys.length, d = q.length;
+    double[] w = new double[n];
+    double max = Double.NEGATIVE_INFINITY;
+
+    for (int j = 0; j &lt; n; j++) {               // steps 2–3: score and scale
+        double dot = 0;
+        for (int i = 0; i &lt; d; i++) dot += q[i] * keys[j][i];
+        w[j] = dot / Math.sqrt(d);
+        max = Math.max(max, w[j]);
+    }
+
+    double sum = 0;                               // step 4: softmax
+    for (int j = 0; j &lt; n; j++) {
+        w[j] = Math.exp(w[j] - max);
+        sum += w[j];
+    }
+
+    double[] out = new double[values[0].length];  // step 5: blend values
+    for (int j = 0; j &lt; n; j++)
+        for (int i = 0; i &lt; out.length; i++)
+            out[i] += (w[j] / sum) * values[j][i];
+    return out;
+}</pre>
+<p style="margin: 0"><code style="font-family: Menlo, Consolas, monospace; font-size: 15px">attend(new double[]{1.0, 0.5}, K, V)</code> with the tables above returns <b>[1.127, 0.751]</b>, the same as the hand calculation.</p>
+<p style="margin: 16px 0 0">Two lines deserve a note:</p>
+<ul style="margin: 12px 0 0; padding-left: 22px">
+<li style="margin-bottom: 8px"><b><code style="font-family: Menlo, Consolas, monospace; font-size: 15px">Math.exp(w[j] - max)</code>.</b> Subtracting the maximum score doesn't change the result, because softmax is unchanged when the same constant is subtracted from every score. It does stop <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">exp</code> from overflowing to <code style="font-family: Menlo, Consolas, monospace; font-size: 15px">Infinity</code> when scores are large.</li>
+<li><b>What's missing for a GPT.</b> In a decoder, a <i>causal mask</i> sets the scores of later tokens to −∞ before softmax, which makes their weight exactly 0. A token can't attend to the future it's being trained to predict.</li>
+</ul>
+
+<h2 style="margin: 44px 0 12px; font-size: 26px; font-weight: normal; color: #222">References</h2>
+<ul style="margin: 0; padding-left: 22px">
+<li>Vaswani et al., <a href="https://arxiv.org/abs/1706.03762">Attention Is All You Need</a> (2017)</li>
+<li><a href="https://github.com/vishnu-vardhan-d/jamna.nn">jamna.nn</a>, my transformer in pure Java</li>
+<li><a href="https://vishnu-vardhan-d.github.io/jamna.nn/">jamna.nn documentation</a>, an interactive explainer that walks through embeddings, attention and softmax with the real trained weights</li>
+</ul>
+</article>
+</body>
+</html>

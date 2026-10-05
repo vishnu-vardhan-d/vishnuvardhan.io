@@ -1,72 +1,75 @@
-const JAVA_SINCE = 2013;
-
 export const profile = {
   name: "Vishnu Vardhan",
-  tagline: "Engineering complex enterprise systems, architecting start-up innovations, and writing code every day.",
+  tagline: "Building AI where the enterprise already runs.",
   location: "Dallas–Fort Worth, Texas",
   email: "vishnu.vardhan.darshi@gmail.com",
-  javaSince: JAVA_SINCE,
-  years: new Date().getFullYear() - JAVA_SINCE,
   links: [
-    { label: "GitHub", href: "https://github.com/vishnu-vardhan-d" },
-    { label: "LinkedIn", href: "https://www.linkedin.com/in/vishnu-vardhan-94832b53" },
-    { label: "Email", href: "mailto:vishnu.vardhan.darshi@gmail.com" },
-  ],
+    { label: "Twitter", icon: "x", href: "https://x.com/DipEngineer" },
+    { label: "GitHub", icon: "github", href: "https://github.com/vishnu-vardhan-d" },
+    { label: "LinkedIn", icon: "linkedin", href: "https://www.linkedin.com/in/vishnu-vardhan-94832b53" },
+  ] as const,
 };
 
-export type Entry = { when: string; title: string; org: string; body?: string };
+export type Project = {
+  name: string;
+  summary: string;
+  links: { label: string; href: string }[];
+};
 
-export const work: Entry[] = [
+export const projects: Project[] = [
   {
-    when: "2021 – Current",
-    title: "Deloitte",
-    org: "Senior Solutions Engineer",
-    body: "Lead developer on a statewide healthcare and benefits platform. I own change requests end to end, from requirements with policy teams to production release. I own the three annual federal policy cycles that re-evaluate every active case. I re-engineered the nightly interface chain to federal and partner systems and restored reliable overnight windows.",
+    name: "RaastaPay",
+    summary: "An AI advisory platform for small trucking operators in\u00A0India.",
+    links: [
+      { label: "Website", href: "https://raastapay.in" },
+      { label: "Docs", href: "https://raastapay.in/docs" },
+    ],
   },
   {
-    when: "2014 – 2021",
-    title: "Accenture",
-    org: "Application Development Lead",
-    body: "Seven years on a statewide healthcare and family-services platform built on the Accenture Public Service Platform, replacing systems the state had run for 24 years. Led a team of developers through delivery, testing and deployment. Rebuilt the state's master person index as sole architect and developer, from program-level risk to meeting requirements, reporting daily to state leadership while the system stayed live.",
+    name: "KanbanAssist",
+    summary: "An AI assistant that finds similar past tickets and drafts a root-cause\u00A0summary.",
+    links: [],
   },
-  {
-    when: "2014",
-    title: "24x7booking.com",
-    org: "Software Engineer",
-    body: "Sole developer for the flight-booking module of a live travel platform in Bangalore, from design through production.",
-  },
-  {
-    when: "2013 – 2014",
-    title: "Schemes Central",
-    org: "Software Engineer",
-    body: "Full-stack engineer on a production e-commerce platform: page flows, front-end features, deployments and platform upgrades, all live.",
-  },
-];
-
-export const ventures: Entry[] = [
-  {
-    when: "2023 – Current",
-    title: "RaastaPay",
-    org: "Principal Engineer & Systems Architect",
-    body: "Sole engineer building a founder's AI advisory product for small trucking operators in India. The system of record does the arithmetic; a panel of Claude-backed advisors on Spring AI reads each offer and returns a verdict in the driver's own language. Every AI output is schema-checked, persisted and auditable. Java 21, Spring Boot, Kafka, PostgreSQL, React Native.",
-  },
-];
-
-export const projects = [
   {
     name: "jamna.nn",
-    href: "https://github.com/vishnu-vardhan-d/jamna.nn",
-    blurb: "A mini Transformer / LLM engine built from scratch in pure Java, no libraries, not even a math one. It learns to sort numbers the way a language model learns to write, by predicting the next token. Ships with an interactive explainer that walks through embeddings, attention and softmax using the real trained weights. MIT.",
+    summary: "A small transformer language model, built from scratch in pure\u00A0Java.",
+    links: [
+      { label: "GitHub", href: "https://github.com/vishnu-vardhan-d/jamna.nn" },
+      { label: "Docs", href: "https://vishnu-vardhan-d.github.io/jamna.nn/" },
+    ],
   },
   {
     name: "options-wall-street",
-    href: "https://github.com/vishnu-vardhan-d/options-wall-street",
-    blurb: "Personal tooling for options analysis. Not a product and not financial advice.",
+    summary: "Personal tooling for options\u00A0analysis.",
+    links: [{ label: "GitHub", href: "https://github.com/vishnu-vardhan-d/options-wall-street" }],
   },
 ];
 
-export const contributing = [
-  { name: "Spring AI", href: "https://github.com/spring-projects/spring-ai" },
-  { name: "Tribuo", href: "https://github.com/oracle/tribuo" },
+// Add an entry here for each published article. href can point to a page on this site or an external post.
+export const articles: { title: string; href: string; date: string; summary: string }[] = [
+  {
+    title: "Why @Service on a method won't compile",
+    href: "/blog/spring-service-annotation.html",
+    date: "Aug 2026",
+    summary: "Spring from first principles, part\u00A01: what a stereotype annotation really is, and the five steps from a class file to a\u00A0bean.",
+  },
+  {
+    title: "Attention in pure Java, with real numbers",
+    href: "/blog/attention-in-pure-java.html",
+    date: "Jul 2026",
+    summary: "The formula from \"Attention Is All You Need\", computed by hand for three tokens, then written as one Java\u00A0method.",
+  },
 ];
 
+export const watches = [
+  { title: "The Java Story", speaker: "The Official Documentary", href: "https://www.youtube.com/watch?v=ZqGSg4b_cZA&t=2653s" },
+  { title: "How a Group of Developers Took Back Control from Enterprise Java", speaker: "Spring: The Documentary", href: "https://www.youtube.com/watch?v=0Gb1z-2SjHY" },
+];
+
+export const principles = [
+  "Make the requirements less dumb",
+  "Delete the part or process step",
+  "Simplify or optimize",
+  "Accelerate cycle time",
+  "Automate",
+];

@@ -13,8 +13,7 @@ export default function CodeCard() {
       <pre className={styles.pre}>
         <code>
 <A>@Engineer</A>(of = <S>"enterprise healthcare"</S>){"\n"}
-<A>@SystemsArchitect</A>(building = <S>"start-up initiatives"</S>){"\n"}
-<A>@Entrepreneur</A>{"\n"}
+<A>@SystemsArchitect</A>(building = <S>"AI on the JVM"</S>){"\n"}
 <K>public final class</K> <T>VishnuVardhan</T> <K>implements</K> <T>FirstPrinciples</T> {"{"}{"\n\n"}
 {"  "}<A>@Builds</A>(with = {"{"} <T>SpringBoot</T>.<K>class</K>, <T>SpringAI</T>.<K>class</K>,{"\n"}
 {"                  "}<T>Kafka</T>.<K>class</K>, <T>Postgres</T>.<K>class</K> {"}"}){"\n"}
