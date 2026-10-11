@@ -54,19 +54,25 @@ export const projects: Project[] = [
 export const articles: { title: string; href: string; date: string; summary: string }[] = [
   {
     title: "Publishing a Home Server Through a Cloudflare Tunnel",
+ article-home-server-tunnel
     href: "https://claude.ai/artifact/FRsoqX1qX8gGy4rZLdcRTS",
     date: "Oct 2026",
     summary: "How an application on a home computer became reachable from the internet without opening a router port, and every error met along the way with its fix.",
+
+    href: "/blog/publishing-a-home-server",
+    date: "Oct 2026",
+    summary: "How an application on a home computer became reachable from the internet without opening a router\u00A0port, and every error met along the way with its\u00A0fix.",
+ main
   },
   {
     title: "Why @Service on a method won't compile",
-    href: "/blog/spring-service-annotation.html",
+    href: "/blog/spring-service-annotation",
     date: "Aug 2026",
     summary: "Spring from first principles, part\u00A01: what a stereotype annotation really is, and the five steps from a class file to a\u00A0bean.",
   },
   {
     title: "Attention in pure Java, with real numbers",
-    href: "/blog/attention-in-pure-java.html",
+    href: "/blog/attention-in-pure-java",
     date: "Jul 2026",
     summary: "The formula from \"Attention Is All You Need\", computed by hand for three tokens, then written as one Java\u00A0method.",
   },
