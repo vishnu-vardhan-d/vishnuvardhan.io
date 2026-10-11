@@ -54,9 +54,15 @@ export const projects: Project[] = [
 export const articles: { title: string; href: string; date: string; summary: string }[] = [
   {
     title: "Publishing a Home Server Through a Cloudflare Tunnel",
+ article-home-server-tunnel
+    href: "https://claude.ai/artifact/FRsoqX1qX8gGy4rZLdcRTS",
+    date: "Oct 2026",
+    summary: "How an application on a home computer became reachable from the internet without opening a router port, and every error met along the way with its fix.",
+
     href: "/blog/publishing-a-home-server",
     date: "Oct 2026",
     summary: "How an application on a home computer became reachable from the internet without opening a router\u00A0port, and every error met along the way with its\u00A0fix.",
+ main
   },
   {
     title: "Why @Service on a method won't compile",
