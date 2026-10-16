@@ -10,6 +10,19 @@ export const profile = {
   ] as const,
 };
 
+// Shown as logo chips under Skills, in this order.
+export const skills = [
+  { name: "Java", icon: "java" },
+  { name: "Spring Boot", icon: "springboot" },
+  { name: "Spring AI", icon: "spring" },
+  { name: "Apache Kafka", icon: "kafka" },
+  { name: "PostgreSQL", icon: "postgresql" },
+  { name: "React", icon: "react" },
+  { name: "Docker", icon: "docker" },
+  { name: "AWS", icon: "aws" },
+  { name: "Ollama", icon: "ollama" },
+] as const;
+
 export type Project = {
   date: string; // TODO: confirm real start dates
   name: string;
@@ -52,6 +65,12 @@ export const projects: Project[] = [
 
 // Add an entry here for each published article. href can point to a page on this site or an external post.
 export const articles: { title: string; href: string; date: string; summary: string }[] = [
+  {
+    title: "Running an Open-Source LLM on My Own GPU",
+    href: "/blog/run-an-llm-on-your-own-gpu",
+    date: "Oct 2026",
+    summary: "A 4-billion-parameter evaluator model on a 4 GB laptop GPU with Ollama, Docker and Spring Boot: why only 80% of it fit, and where each of the 9.8 seconds of one answer went.",
+  },
   {
     title: "Publishing a Home Server Through a Cloudflare Tunnel",
     href: "/blog/publishing-a-home-server",

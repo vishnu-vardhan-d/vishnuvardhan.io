@@ -4,7 +4,8 @@ import portrait from "@/public/assets/portrait.png";
 import styles from "./page.module.css";
 import VisitCounter from "@/components/VisitCounter";
 import SocialIcons from "@/components/SocialIcons";
-import { profile, projects, articles, watches } from "@/content/profile";
+import SkillChips from "@/components/SkillChips";
+import { profile, skills, projects, articles, watches } from "@/content/profile";
 
 export default function Home() {
   return (
@@ -48,6 +49,10 @@ export default function Home() {
           </p>
         </section>
 
+        <section>
+          <h2>Skills</h2>
+          <SkillChips skills={skills} />
+        </section>
 
         <section>
           <h2>Projects</h2>

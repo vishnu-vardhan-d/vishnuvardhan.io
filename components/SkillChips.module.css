@@ -1,0 +1,28 @@
+/* Skills: one rounded chip per technology, logo on the left, wrapping onto new lines. */
+.row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1.1rem 0.45rem 0.9rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #444;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.chip svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  fill: #444;
+}
