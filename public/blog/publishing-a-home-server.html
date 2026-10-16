@@ -409,3 +409,9 @@ footer{margin-top:44px;padding-top:14px;border-top:1px solid var(--rule);font-si
 <footer>Vishnu Vardhan · 11 October 2026</footer>
 
 </div>
+<script>
+/* Visitor count: counts each browser once; skips the owner's browsers (?me) and non-production hosts. */
+(function(){try{var p=new URLSearchParams(location.search);if(p.has("me")){if(p.get("me")==="off")localStorage.removeItem("owner");else localStorage.setItem("owner","1");}
+if(location.hostname!=="vishnuvardhan.io"||localStorage.getItem("owner")||localStorage.getItem("counted"))return;
+fetch("https://visits.vishnuvardhan.io",{method:"POST"}).then(function(r){if(r.ok)localStorage.setItem("counted","1");}).catch(function(){});}catch(e){}})();
+</script>

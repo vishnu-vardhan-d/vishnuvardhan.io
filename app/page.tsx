@@ -50,11 +50,6 @@ export default function Home() {
         </section>
 
         <section>
-          <h2>Skills</h2>
-          <SkillChips skills={skills} />
-        </section>
-
-        <section>
           <h2>Projects</h2>
           <div className={styles.tl}>
             {projects.map((p) => (
@@ -98,6 +93,11 @@ export default function Home() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section>
+          <h2>Tools I Work With</h2>
+          <SkillChips skills={skills} />
         </section>
 
         <footer className={styles.footer}>

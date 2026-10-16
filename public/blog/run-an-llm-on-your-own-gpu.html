@@ -17,12 +17,6 @@
   --head:"IBM Plex Sans Condensed","Arial Narrow","Helvetica Neue",Arial,sans-serif;
   --mono:"JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --paper:#121615; --ink:#E4E9E7; --muted:#9AA6A3; --rule:#2B3331; --panel:#1A201F; --code:#1F2625;
-  --gpu:#4FC2B8; --gpu-soft:#173B38; --cpu:#E2A25A; --cpu-soft:#3D2C17; --warn:#F2948C; --ok:#7AD198; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --paper:#121615; --ink:#E4E9E7; --muted:#9AA6A3; --rule:#2B3331; --panel:#1A201F; --code:#1F2625;
-  --gpu:#4FC2B8; --gpu-soft:#173B38; --cpu:#E2A25A; --cpu-soft:#3D2C17; --warn:#F2948C; --ok:#7AD198; color-scheme:dark}
 body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:19px;line-height:1.62;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
 main{max-width:720px;margin:0 auto}
@@ -220,6 +214,15 @@ figure.wide{width:min(1000px,calc(100vw - 32px));position:relative;left:50%;tran
 .res span{font-size:12.5px;color:var(--muted)}
 .tags{list-style:none;padding:0;margin:0 0 16px;display:flex;flex-wrap:wrap;gap:6px}
 .tags li{font-family:var(--head);font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--rule);color:var(--gpu);background:var(--panel)}
+
+/* Site theme: match the other articles (white page, Helvetica, blue links). */
+:root{--paper:#FFFFFF;--ink:#333333;--muted:#6B6F76;--rule:#E3E5E8;--panel:#FFFFFF;--code:#F3F4F6;
+  --serif:"Helvetica Neue",Helvetica,Arial,sans-serif;--head:"Helvetica Neue",Helvetica,Arial,sans-serif;color-scheme:light}
+body{font-size:17px;line-height:1.6}
+h1{font-size:38px;font-weight:normal;color:#222}
+h2,h3{color:#222}
+a{color:#1A55A6}a:hover{color:#0E3A75}
+.back{color:#1A55A6}
 </style>
 
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}.back{display:inline-block;margin-top:28px;font-family:var(--head);font-size:15px;text-decoration:none}</style>
@@ -481,5 +484,11 @@ figure.wide{width:min(1000px,calc(100vw - 32px));position:relative;left:50%;tran
 })();
 </script>
 
+<script>
+/* Visitor count: counts each browser once; skips the owner's browsers (?me) and non-production hosts. */
+(function(){try{var p=new URLSearchParams(location.search);if(p.has("me")){if(p.get("me")==="off")localStorage.removeItem("owner");else localStorage.setItem("owner","1");}
+if(location.hostname!=="vishnuvardhan.io"||localStorage.getItem("owner")||localStorage.getItem("counted"))return;
+fetch("https://visits.vishnuvardhan.io",{method:"POST"}).then(function(r){if(r.ok)localStorage.setItem("counted","1");}).catch(function(){});}catch(e){}})();
+</script>
 </body>
 </html>
