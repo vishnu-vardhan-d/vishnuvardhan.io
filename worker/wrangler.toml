@@ -9,4 +9,4 @@ routes = [{ pattern = "visits.vishnuvardhan.io", custom_domain = true }]
 # then paste the id it prints below.
 [[kv_namespaces]]
 binding = "VISITS"
-id = "PASTE_KV_NAMESPACE_ID_HERE"
+id = "5160c8dadf2c476ca36de37bae721e75"
