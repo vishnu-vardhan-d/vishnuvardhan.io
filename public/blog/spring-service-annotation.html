@@ -100,5 +100,7 @@ public class AiConfig {
 if(location.hostname!=="vishnuvardhan.io"||localStorage.getItem("owner")||localStorage.getItem("counted"))return;
 fetch("https://visits.vishnuvardhan.io",{method:"POST"}).then(function(r){if(r.ok)localStorage.setItem("counted","1");}).catch(function(){});}catch(e){}})();
 </script>
+<!-- Cloudflare Web Analytics: cookieless page-view stats (countries, pages, referrers). -->
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "76707937b9244ea6a6f296c02f869675"}'></script>
 </body>
 </html>

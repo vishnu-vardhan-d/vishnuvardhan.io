@@ -17,7 +17,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        {/* Cloudflare Web Analytics: cookieless page-view stats (countries, pages, referrers). */}
+        <script
+          type="module"
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token": "76707937b9244ea6a6f296c02f869675"}'
+        />
+      </body>
     </html>
   );
 }

@@ -66,6 +66,12 @@ export const projects: Project[] = [
 // Add an entry here for each published article. href can point to a page on this site or an external post.
 export const articles: { title: string; href: string; date: string; summary: string }[] = [
   {
+    title: "Counting Visitors on a Static Site",
+    href: "/blog/counting-visitors-on-a-static-site",
+    date: "Oct 2026",
+    summary: "Why a site on GitHub Pages can't count its own readers, and how a Cloudflare Worker and a key-value store count them without storing a single IP address.",
+  },
+  {
     title: "Running an Open-Source LLM on My Own GPU",
     href: "/blog/run-an-llm-on-your-own-gpu",
     date: "Oct 2026",
