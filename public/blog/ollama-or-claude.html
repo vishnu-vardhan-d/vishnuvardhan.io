@@ -82,6 +82,8 @@ table.cmp td:first-child{font-weight:600;color:var(--head-ink)}
 table.cmp td:nth-child(2){color:var(--muted)}
 table.cmp em{font-style:normal;color:var(--accent);font-size:12.5px;white-space:nowrap}
 tr.grp th{background:var(--accent-soft);color:var(--accent);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px}
+th,dt{text-wrap:balance}
+caption{text-wrap:pretty}
 </style>
 </head>
 <body>
@@ -91,7 +93,7 @@ tr.grp th{background:var(--accent-soft);color:var(--accent);font-size:12px;lette
 <ul class="tags"><li>Local&nbsp;LLMs</li><li>Claude</li><li>Spring&nbsp;AI</li></ul>
 <h1>Ollama on a 4 GB GPU vs Claude: when a local model stops being enough</h1>
 <p class="dek">I ran my RCA assistant with Ollama on a 4 GB laptop GPU, measured where it ran out, and moved its reasoning to Claude while keeping embeddings&nbsp;local.</p>
-<div class="byline"><span>Vishnu Vardhan</span><span>October 2026</span><span>Project:&nbsp;KanbanAssist</span></div>
+<div class="byline"><span>Vishnu Vardhan</span><time datetime="2026-10-21">Wednesday, October&nbsp;21,&nbsp;2026</time><span>Project:&nbsp;KanbanAssist</span></div>
 </header>
 
 <p class="lead">KanbanAssist is my open-source root-cause-analysis (RCA) assistant for Azure DevOps tickets. A webhook brings in each new ticket, pgvector finds the five most similar past tickets, and a model writes the likely cause and fix. That model was <code>qwen3:4b</code>, running in Ollama on my laptop's 4 GB GPU. When I started building toward an autonomous agent, where the model has to reason across several steps, the local model stopped being a learning tool and became the&nbsp;bottleneck.</p>

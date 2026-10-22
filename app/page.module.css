@@ -122,5 +122,5 @@
   background: #cfcfcf;
   border: 2px solid var(--paper);
 }
-.tlTitle { font-size: 1.1rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0; }
-.tlBody p { margin: 0.25rem 0 0; color: #555; }
+.tlTitle { font-size: 1.1rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem 0; text-wrap: balance; }
+.tlBody p { margin: 0.25rem 0 0; color: #555; text-wrap: pretty; }

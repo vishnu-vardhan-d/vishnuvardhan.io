@@ -72,9 +72,11 @@ export default function Home() {
         <section>
           <h2>Articles</h2>
           <div className={styles.tl}>
-            {articles.map((a) => (
+            {articles.map((a, i) => (
               <div className={styles.tlRow} key={a.href}>
-                <div className={styles.tlDate}>{a.date}</div>
+                {/* Show the month only on the first article of that month; the dot still marks every article.
+                    Example: Oct, Oct, Oct, Aug -> "Oct 2026", "", "", "Aug 2026". */}
+                <div className={styles.tlDate}>{i > 0 && articles[i - 1].date === a.date ? "" : a.date}</div>
                 <div className={styles.tlBody}>
                   <div className={styles.tlTitle}><a href={a.href}>{a.title}</a></div>
                   <p>{a.summary}</p>
