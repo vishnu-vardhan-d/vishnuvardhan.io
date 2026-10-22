@@ -66,6 +66,12 @@ export const projects: Project[] = [
 // Add an entry here for each published article. href can point to a page on this site or an external post.
 export const articles: { title: string; href: string; date: string; summary: string }[] = [
   {
+    title: "Ollama on a 4 GB GPU vs Claude: When a Local Model Stops Being Enough",
+    href: "/blog/ollama-or-claude",
+    date: "Oct 2026",
+    summary: "I ran my RCA assistant with Ollama on a 4 GB laptop GPU, measured where it ran out, and moved its reasoning to Claude while keeping embeddings\u00A0local.",
+  },
+  {
     title: "Counting Visitors on a Static Site",
     href: "/blog/counting-visitors-on-a-static-site",
     date: "Oct 2026",

@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ollama on a 4 GB GPU vs Claude · Vishnu Vardhan</title>
+<meta name="description" content="I ran my RCA assistant with Ollama on a 4 GB laptop GPU, measured where it ran out, and moved its reasoning to Claude while keeping embeddings local.">
+<style>
+/* Layout: one reading column (~720px) matching vishnuvardhan.io; blue marks the GPU and Claude path, amber marks memory pressure and the skipped bean. */
+:root{
+  --paper:#FFFFFF; --ink:#333333; --head-ink:#222222; --muted:#6B6F76; --rule:#E3E5E8; --panel:#F7F8FA; --code:#F3F4F6;
+  --accent:#1A55A6; --accent-soft:#E3ECF8; --warn:#A8641A; --warn-soft:#F3E3CC; --link:#1A55A6;
+  --sans:"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.65;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+main{max-width:720px;margin:0 auto}
+p,li{orphans:2;widows:2;text-wrap:pretty}
+p{margin:0 0 1.05rem}
+h1,h2,h3{text-wrap:balance;line-height:1.2;color:var(--head-ink)}
+h1{font-size:clamp(1.9rem,5.5vw,2.3rem);font-weight:normal;margin:0}
+h2{font-size:1.5rem;font-weight:600;margin:3.2rem 0 .8rem;padding-top:1.2rem;border-top:1px solid var(--rule)}
+h3{font-size:1.15rem;font-weight:600;margin:2rem 0 .5rem}
+a{color:var(--link)} a:hover{color:#0E3A75}
+a:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+.back{display:inline-block;margin-top:28px;font-size:15px;text-decoration:none}
+header.mast{padding-top:36px;padding-bottom:8px}
+.tags{list-style:none;padding:0;margin:0 0 16px;display:flex;flex-wrap:wrap;gap:6px}
+.tags li{font-size:12.5px;font-weight:600;padding:3px 10px;border-radius:999px;border:1px solid var(--rule);color:var(--accent)}
+.dek{font-size:1.18rem;color:var(--muted);margin:14px 0 22px;line-height:1.45}
+.byline{font-size:.9rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 18px;padding:12px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin-bottom:28px}
+.summary{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:18px 22px;margin-bottom:28px}
+.summary p:last-child{margin-bottom:0}
+.summary strong{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+nav.toc{font-size:15px;margin-bottom:8px}
+nav.toc ol{padding-left:1.4rem;margin:.5rem 0 0;columns:2 15rem;column-gap:2rem}
+nav.toc li{margin-bottom:.2rem;break-inside:avoid}
+code{font-family:var(--mono);font-size:.84em;background:var(--code);padding:.08em .32em;border-radius:3px;overflow-wrap:anywhere}
+pre{font-family:var(--mono);font-size:13px;line-height:1.55;background:var(--code);padding:16px 18px;border-radius:6px;overflow-x:auto;margin:1.2rem 0}
+pre code{background:none;padding:0;font-size:inherit;overflow-wrap:normal}
+pre.math{border-left:3px solid var(--accent);border-radius:0 6px 6px 0}
+.table-wrap{overflow-x:auto;margin:0 0 1.3rem}
+table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.45;font-variant-numeric:tabular-nums}
+caption{caption-side:top;text-align:left;font-size:.88rem;color:var(--muted);padding-bottom:.5rem}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--rule)}
+th{font-weight:600;background:var(--panel)}
+td.num,th.num{text-align:right;white-space:nowrap}
+figure{margin:1.8rem 0}
+figure .fig{overflow-x:auto;border:1px solid var(--rule);border-radius:6px;background:var(--panel);padding:12px}
+figure svg{display:block;width:100%;height:auto;min-width:560px}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:.6rem;line-height:1.45}
+.qa dt{font-weight:600;margin-top:1.3rem}
+.qa dd{margin:.3rem 0 0}
+.sources{font-size:15px}
+.sources li{margin-bottom:.35rem;overflow-wrap:anywhere}
+footer{margin-top:3rem;padding-top:1rem;border-top:1px solid var(--rule);font-size:.88rem;color:var(--muted)}
+.s-box{fill:var(--paper);stroke:#C9CDD3;stroke-width:1.5}
+.s-acc{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.s-warn{fill:var(--warn-soft);stroke:var(--warn);stroke-width:1.5}
+.s-bar-a{fill:var(--accent)} .s-bar-w{fill:var(--warn)} .s-bar-m{fill:#7A8088}
+.s-t{font-family:var(--sans);font-size:14px;fill:var(--head-ink)}
+.s-tb{font-family:var(--sans);font-size:14px;font-weight:600;fill:var(--head-ink)}
+.s-ts{font-family:var(--sans);font-size:12.5px;fill:var(--muted)}
+.s-tm{font-family:var(--mono);font-size:12.5px;fill:var(--head-ink)}
+.s-line{stroke:#7A8088;stroke-width:1.5;fill:none}
+.s-dash{stroke:var(--warn);stroke-width:2;stroke-dasharray:6 4;fill:none}
+@media (max-width:520px){body{font-size:16px} h2{font-size:1.3rem}}
+.lead{font-size:1.06em}
+.rule-box{border-left:3px solid var(--accent);background:var(--panel);padding:14px 18px;margin:0 0 8px;border-radius:0 6px 6px 0}
+.rule-box strong{display:block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:4px}
+.s-in{font-family:var(--sans);font-size:12.5px;font-weight:600;fill:#FFFFFF}
+.s-tbm{font-family:var(--mono);font-size:13.5px;font-weight:600;fill:var(--head-ink)}
+.s-gap{stroke:var(--paper);stroke-width:2}
+figcaption,td,li,dd,.dek,.rule-box,.lead{text-wrap:pretty}
+table{min-width:560px}
+table:not(.cmp) td:first-child{white-space:nowrap}
+table.cmp{min-width:680px;font-size:14px}
+table.cmp td:first-child{font-weight:600;color:var(--head-ink)}
+table.cmp td:nth-child(2){color:var(--muted)}
+table.cmp em{font-style:normal;color:var(--accent);font-size:12.5px;white-space:nowrap}
+tr.grp th{background:var(--accent-soft);color:var(--accent);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px}
+</style>
+</head>
+<body>
+<main>
+<article>
+<header class="mast">
+<ul class="tags"><li>Local&nbsp;LLMs</li><li>Claude</li><li>Spring&nbsp;AI</li></ul>
+<h1>Ollama on a 4 GB GPU vs Claude: when a local model stops being enough</h1>
+<p class="dek">I ran my RCA assistant with Ollama on a 4 GB laptop GPU, measured where it ran out, and moved its reasoning to Claude while keeping embeddings&nbsp;local.</p>
+<div class="byline"><span>Vishnu Vardhan</span><span>October 2026</span><span>Project:&nbsp;KanbanAssist</span></div>
+</header>
+
+<p class="lead">KanbanAssist is my open-source root-cause-analysis (RCA) assistant for Azure DevOps tickets. A webhook brings in each new ticket, pgvector finds the five most similar past tickets, and a model writes the likely cause and fix. That model was <code>qwen3:4b</code>, running in Ollama on my laptop's 4 GB GPU. When I started building toward an autonomous agent, where the model has to reason across several steps, the local model stopped being a learning tool and became the&nbsp;bottleneck.</p>
+
+<h2 id="side">1. My laptop and Claude, side by side</h2>
+<p>This table is the short version of the story. Rows marked measured come from my own laptop; the sections after it explain the numbers that decided the&nbsp;switch.</p>
+
+<div class="table-wrap">
+<table class="cmp">
+<caption>Table 1. My laptop and Claude, side by side. Measured values come from my earlier article; the rest is derived or from Anthropic's documentation.</caption>
+<thead><tr><th>Metric</th><th>What it means</th><th>qwen3:4b in Ollama, my laptop</th><th>Claude Sonnet 5.5</th></tr></thead>
+<tbody>
+<tr class="grp"><th colspan="4">Hardware</th></tr>
+<tr><td>Where it&nbsp;runs</td><td>The machine doing the&nbsp;work</td><td>Dell laptop, NVIDIA Quadro T1000, 4&nbsp;GB</td><td>Anthropic's data&nbsp;centers</td></tr>
+<tr><td>Model&nbsp;size</td><td>How many learned numbers (weights) it&nbsp;has</td><td>4 billion weights, 2.44 GB after 4&#8209;bit&nbsp;compression</td><td>Not&nbsp;published</td></tr>
+<tr class="grp"><th colspan="4">Memory</th></tr>
+<tr><td>GPU memory&nbsp;free</td><td>What the card offers after Windows takes its&nbsp;share</td><td>3.2 GiB of 4 GB&nbsp;<em>(measured)</em></td><td>Not my&nbsp;concern</td></tr>
+<tr><td>Where the model&nbsp;sits</td><td>Layers on the fast GPU versus slow system&nbsp;RAM</td><td>29 layers on GPU, 8 on CPU: 80% fit&nbsp;<em>(measured)</em></td><td>All on Anthropic's&nbsp;hardware</td></tr>
+<tr><td>Memory per&nbsp;token</td><td>KV cache: what the model keeps about each earlier&nbsp;token</td><td>147,456&nbsp;bytes</td><td>Handled by&nbsp;Anthropic</td></tr>
+<tr class="grp"><th colspan="4">Tokens and context</th></tr>
+<tr><td>Context&nbsp;window</td><td>Most tokens in one request, prompt plus&nbsp;answer</td><td>262,144 trained; about 6,800 fit on my&nbsp;card</td><td>1,000,000</td></tr>
+<tr><td>Longest&nbsp;answer</td><td>Most tokens one reply can&nbsp;contain</td><td>Limited by the same&nbsp;memory</td><td>128,000</td></tr>
+<tr><td>Prompt too&nbsp;long</td><td>What happens past the&nbsp;limit</td><td>Ollama quietly cuts the&nbsp;prompt</td><td>The API returns an&nbsp;error</td></tr>
+<tr class="grp"><th colspan="4">Speed</th></tr>
+<tr><td>Reading the&nbsp;prompt</td><td>Tokens processed before the answer&nbsp;starts</td><td>60.4 tokens/s: 109 tokens in 1.80 s&nbsp;<em>(measured)</em></td><td>Not&nbsp;published</td></tr>
+<tr><td>Writing the&nbsp;answer</td><td>Tokens generated per&nbsp;second</td><td>15.9 tokens/s: 125 tokens in 7.86 s&nbsp;<em>(measured)</em></td><td>About 42 tokens/s&nbsp;<em>(third&#8209;party)</em></td></tr>
+<tr><td>One short&nbsp;answer</td><td>Total time for one&nbsp;request</td><td>9.82 s&nbsp;<em>(measured)</em></td><td>Fast on Investigate; Langfuse timing&nbsp;next</td></tr>
+<tr><td>Parallel&nbsp;requests</td><td>Can it answer several at&nbsp;once?</td><td>One at a time; a second cache does not&nbsp;fit</td><td>Many, within rate&nbsp;limits</td></tr>
+<tr class="grp"><th colspan="4">Cost</th></tr>
+<tr><td>Price</td><td>What each token&nbsp;costs</td><td>$0; I pay for the GPU and&nbsp;power</td><td>$2 per million input, $10 per million&nbsp;output</td></tr>
+<tr><td>One RCA&nbsp;call</td><td>8,000 tokens in, 800&nbsp;out</td><td>$0</td><td>$0.024</td></tr>
+<tr><td>Discounts</td><td>Ways to pay&nbsp;less</td><td>Not&nbsp;needed</td><td>Cached input $0.10 per million; Batch API half&nbsp;price</td></tr>
+<tr class="grp"><th colspan="4">Limits and quality</th></tr>
+<tr><td>Rate&nbsp;limits</td><td>Caps on how much you can&nbsp;send</td><td>None; the GPU is the&nbsp;cap</td><td>Per minute: 1,000 requests, 2M input, 400K output&nbsp;tokens</td></tr>
+<tr><td>Reasoning&nbsp;quality</td><td>How well it reasons over the retrieved&nbsp;tickets</td><td>Became my bottleneck while building the&nbsp;agent</td><td>Fast, usable answers on Investigate; formal evaluation&nbsp;next</td></tr>
+<tr class="grp"><th colspan="4">Data and control</th></tr>
+<tr><td>Data leaves my&nbsp;machine</td><td>Where ticket text&nbsp;goes</td><td>No</td><td>Yes, to&nbsp;Anthropic</td></tr>
+<tr><td>Works&nbsp;offline</td><td>Runs without&nbsp;internet</td><td>Yes</td><td>No</td></tr>
+<tr><td>Model&nbsp;changes</td><td>Can the model change under&nbsp;you?</td><td>Never; the file is&nbsp;pinned</td><td>Pinned IDs; old models are&nbsp;retired</td></tr>
+<tr><td>Fine&#8209;tuning</td><td>Training it further on your own&nbsp;data</td><td>Allowed: open weights, Apache&nbsp;2.0</td><td>No self&#8209;serve&nbsp;option</td></tr>
+<tr><td>Embeddings</td><td>Turning text into vectors for&nbsp;search</td><td>nomic&#8209;embed&#8209;text,&nbsp;local</td><td>Not offered; use another&nbsp;provider</td></tr>
+</tbody>
+</table>
+</div>
+<p>The measured column tells the real story. My card held only 80 percent of the model, so it wrote 15.9 tokens per second and took 9.82 seconds for a 125-token answer. Claude's constraints are money and rate limits, not memory, and at $0.024 per call the money is&nbsp;small.</p>
+
+<h2 id="moment">2. The moment it stopped working</h2>
+<p>When an RCA answer from the local model was wrong, it had three possible causes, and I had no way to tell them apart. An agent that loops an Analyst and a Critic over several steps would multiply that doubt at every&nbsp;step.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 200" role="img" aria-labelledby="fa-t fa-d">
+<title id="fa-t">Three suspects for one wrong answer</title>
+<desc id="fa-d">A wrong RCA answer could come from the prompt, the code or the small model, so every failure was ambiguous.</desc>
+<defs><marker id="m-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#7A8088" stroke-width="1.6"/></marker></defs>
+<rect class="s-warn" x="24" y="72" width="170" height="56" rx="5"/>
+<text class="s-tb" x="109" y="95" text-anchor="middle">Wrong RCA answer</text>
+<text class="s-ts" x="109" y="114" text-anchor="middle">from the local model</text>
+<rect class="s-box" x="268" y="20" width="190" height="44" rx="5"/>
+<text class="s-t" x="363" y="47" text-anchor="middle">My prompt?</text>
+<rect class="s-box" x="268" y="78" width="190" height="44" rx="5"/>
+<text class="s-t" x="363" y="105" text-anchor="middle">My code?</text>
+<rect class="s-box" x="268" y="136" width="190" height="44" rx="5"/>
+<text class="s-t" x="363" y="163" text-anchor="middle">The 4B model's limits?</text>
+<path class="s-line" d="M194 100 H230 V42 H264" marker-end="url(#m-a)"/>
+<path class="s-line" d="M194 100 H264" marker-end="url(#m-a)"/>
+<path class="s-line" d="M230 100 V158 H264" marker-end="url(#m-a)"/>
+<rect class="s-acc" x="500" y="72" width="156" height="56" rx="5"/>
+<text class="s-tb" x="578" y="95" text-anchor="middle">No signal</text>
+<text class="s-ts" x="578" y="114" text-anchor="middle">nothing to learn</text>
+<path class="s-line" d="M458 42 H478 V100 H496" marker-end="url(#m-a)"/>
+<path class="s-line" d="M458 100 H496"/>
+<path class="s-line" d="M458 158 H478 V100"/>
+</svg>
+</div>
+<figcaption>Figure 1. A weak model turns every failure into a three-way guess. I was debugging the model instead of my&nbsp;design.</figcaption>
+</figure>
+
+<p>A strong model removes the third suspect, so a failure points at my prompt or my code, which are the things I can fix. To see why the small model was weak and slow on my machine, I worked the numbers from the hardware&nbsp;up.</p>
+
+<h2 id="gpu">3. Why a 4 GB GPU stalls</h2>
+<p>To write one token, the GPU must read every weight of the model from its memory. My model has 4.02 billion weights, compressed to about 4.85 bits each, so every token moves 4.02 B × 4.85 ÷ 8 = 2.44 GB. A laptop card with a 128-bit bus at 12 Gbps moves 16 bytes × 12 billion = 192&nbsp;GB/s.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 180" role="img" aria-labelledby="f1-t f1-d">
+<title id="f1-t">Time budget for one token</title>
+<desc id="f1-d">Reading 2.44 GB of weights takes 12.7 ms; the arithmetic takes 0.8 ms.</desc>
+<text class="s-tb" x="24" y="32">One token on a 192 GB/s GPU</text>
+<text class="s-t" x="24" y="76">Read 2.44 GB of weights</text>
+<rect class="s-bar-a" x="232" y="60" width="352" height="24" rx="3"/>
+<text class="s-tb" x="596" y="77">12.7 ms</text>
+<text class="s-t" x="24" y="124">Arithmetic, 8 billion ops</text>
+<rect class="s-bar-w" x="232" y="108" width="22" height="24" rx="3"/>
+<text class="s-tb" x="266" y="125">0.8 ms</text>
+<text class="s-ts" x="24" y="164">Same time scale on both bars. Ceiling: 192 ÷ 2.44 = 79 tokens per second.</text>
+</svg>
+</div>
+<figcaption>Figure 2. Moving data takes 16 times longer than computing with it. Generation is limited by memory bandwidth, not by the GPU's&nbsp;cores.</figcaption>
+</figure>
+
+<p>The second cost is the KV cache, the model's memory of earlier tokens. Every token keeps a Key and a Value vector in each of 36 layers: 36 × 2 × (8 heads × 128 numbers) × 2 bytes = 147,456 bytes per token. My RCA prompt is about 8,000 tokens, so a context of 8,192 tokens needs 8,192 × 147,456 bytes = 1.21&nbsp;GB.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 230" role="img" aria-labelledby="f2-t f2-d">
+<title id="f2-t">GPU memory budget</title>
+<desc id="f2-d">Weights 2.44 GB, KV cache 1.21 GB, runtime 0.50 GB and display 0.35 GB total 4.50 GB, beyond the 4.29 GB card.</desc>
+<text class="s-tb" x="24" y="32">What must fit on a 4 GiB card (4.29 GB)</text>
+<rect class="s-bar-a" x="24" y="56" width="310" height="34"/>
+<rect class="s-bar-w" x="334" y="56" width="154" height="34"/>
+<rect class="s-bar-m" x="488" y="56" width="64" height="34"/>
+<rect class="s-bar-m" x="552" y="56" width="44" height="34" opacity=".55"/>
+<line class="s-dash" x1="569" y1="44" x2="569" y2="102"/>
+<text class="s-ts" x="476" y="120">Card limit 4.29 GB</text>
+<rect class="s-bar-a" x="24" y="140" width="14" height="14"/>
+<text class="s-t" x="46" y="152">Weights 2.44 GB</text>
+<rect class="s-bar-w" x="232" y="140" width="14" height="14"/>
+<text class="s-t" x="254" y="152">KV cache, 8,192 tokens 1.21 GB</text>
+<rect class="s-bar-m" x="24" y="170" width="14" height="14"/>
+<text class="s-t" x="46" y="182">Runtime 0.50 GB</text>
+<rect class="s-bar-m" x="232" y="170" width="14" height="14" opacity=".55"/>
+<text class="s-t" x="254" y="182">Windows display 0.35 GB</text>
+<text class="s-tb" x="24" y="216">Total 4.50 GB: 0.21 GB more than the card holds</text>
+</svg>
+</div>
+<figcaption>Figure 3. The model plus one RCA prompt does not fit. The memory left for the KV cache is 4.29 − 2.44 − 0.50 − 0.35 = 1.00 GB, which holds 6,780&nbsp;tokens.</figcaption>
+</figure>
+
+<p>When memory runs out, Ollama moves some layers to system RAM, where the CPU runs them. Laptop RAM moves 51.2 GB/s, a quarter of the GPU's speed, and my earlier article measured exactly this: <a href="/blog/run-an-llm-on-your-own-gpu">only 80 percent of the model fit on the&nbsp;GPU</a>.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 170" role="img" aria-labelledby="f3-t f3-d">
+<title id="f3-t">Cost of spilling layers to the CPU</title>
+<desc id="f3-d">All layers on the GPU take 12.7 ms per token; with 8 layers on the CPU it takes 9.9 plus 10.6, 20.5 ms.</desc>
+<text class="s-tb" x="24" y="32">Time per token</text>
+<text class="s-t" x="24" y="73">GPU only</text>
+<rect class="s-bar-a" x="160" y="56" width="260" height="26" rx="3"/>
+<text class="s-tb" x="432" y="74">12.7 ms</text>
+<text class="s-t" x="24" y="121">8 layers on CPU</text>
+<rect class="s-bar-a" x="160" y="104" width="203" height="26" rx="3"/>
+<rect class="s-bar-w" x="363" y="104" width="217" height="26" rx="3"/>
+<text x="261" y="122" text-anchor="middle" class="s-in">28 layers, GPU 9.9 ms</text>
+<text x="471" y="122" text-anchor="middle" class="s-in">8 layers, CPU 10.6 ms</text>
+<text class="s-tb" x="592" y="122">20.5 ms</text>
+<text class="s-ts" x="24" y="158">22 percent of the layers on slow memory add 61 percent to every token.</text>
+</svg>
+</div>
+<figcaption>Figure 4. The slowest memory sets the pace for the whole&nbsp;model.</figcaption>
+</figure>
+
+<p>Context tells the same story. The model was trained for 262,144 tokens, but my card can hold the cache for 6,780 of them. Claude Sonnet 5.5 accepts 1,000,000, and its cache lives on Anthropic's hardware, not&nbsp;mine.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 170" role="img" aria-labelledby="f4-t f4-d">
+<title id="f4-t">Context window, to scale</title>
+<desc id="f4-d">Usable on the 4 GB GPU 6,780 tokens; qwen3-4B trained for 262,144; Claude Sonnet 5.5 accepts 1,000,000.</desc>
+<text class="s-tb" x="24" y="30">Tokens one request can hold, drawn to scale</text>
+<text class="s-t" x="24" y="68">Usable on my 4 GB GPU</text>
+<rect class="s-bar-w" x="200" y="54" width="3" height="20"/>
+<text class="s-tb" x="214" y="69">6,780</text>
+<text class="s-t" x="24" y="106">qwen3-4B trained for</text>
+<rect class="s-bar-m" x="200" y="92" width="94" height="20"/>
+<text class="s-tb" x="306" y="107">262,144</text>
+<text class="s-t" x="24" y="144">Claude Sonnet 5.5</text>
+<rect class="s-bar-a" x="200" y="130" width="360" height="20"/>
+<text class="s-tb" x="572" y="145">1,000,000</text>
+</svg>
+</div>
+<figcaption>Figure 5. The model's limit is not the limit you get. On a small card, memory decides how much a prompt can&nbsp;hold.</figcaption>
+</figure>
+
+<h2 id="answer">4. Time to a correct answer</h2>
+<p>Claude writes about 42 tokens per second in third&#8209;party measurements, close to my laptop's 40. Speed per token is the wrong metric. What matters is how long it takes to get an answer you can use, which adds the time to read the prompt and multiplies by the&nbsp;attempts.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 210" role="img" aria-labelledby="f5-t f5-d">
+<title id="f5-t">Time to a usable RCA answer</title>
+<desc id="f5-d">Local: three attempts of 12.9 s reading and 20 s writing, 99 s. Claude: one attempt of about 20 s.</desc>
+<text class="s-ts" x="225" y="46" text-anchor="middle">Attempt 1</text>
+<text class="s-ts" x="375" y="46" text-anchor="middle">Critic retry</text>
+<text class="s-ts" x="525" y="46" text-anchor="middle">Critic retry</text>
+<text class="s-t" x="24" y="75">qwen3:4b, local</text>
+<rect class="s-bar-a" x="150" y="58" width="59" height="26"/>
+<rect class="s-bar-w" x="209" y="58" width="91" height="26"/>
+<rect class="s-bar-a" x="300" y="58" width="59" height="26"/>
+<rect class="s-bar-w" x="359" y="58" width="91" height="26"/>
+<rect class="s-bar-a" x="450" y="58" width="59" height="26"/>
+<rect class="s-bar-w" x="509" y="58" width="91" height="26"/>
+<line x1="300" y1="54" x2="300" y2="88" class="s-gap"/>
+<line x1="450" y1="54" x2="450" y2="88" class="s-gap"/>
+<text class="s-tb" x="612" y="76">99 s</text>
+<text class="s-t" x="24" y="127">Claude</text>
+<rect class="s-bar-w" x="150" y="110" width="91" height="26"/>
+<text class="s-tb" x="253" y="128">about 20 s, one attempt</text>
+<rect class="s-bar-a" x="24" y="166" width="14" height="14"/>
+<text class="s-t" x="46" y="178">Reading the 8,000-token prompt (12.9 s)</text>
+<rect class="s-bar-w" x="360" y="166" width="14" height="14"/>
+<text class="s-t" x="382" y="178">Writing 800 tokens (20 s)</text>
+</svg>
+</div>
+<figcaption>Figure 6. With two Critic retries, an illustrative count for a weak model, the local path takes five times longer. Claude's reading time is too short to draw at this&nbsp;scale.</figcaption>
+</figure>
+
+<p>Retries also compound. If each agent step succeeds 85 percent of the time, four steps succeed 0.85⁴ = 52 percent of the time; at 97 percent per step, 0.97⁴ = 88 percent.</p>
+
+<h2 id="cost">5. What Claude costs, and where the limits bite</h2>
+<p>Claude Sonnet 5.5 costs $2 per million input tokens and $10 per million output tokens. Output costs five times more because input is read in one parallel pass, while every output token needs its own pass through the model. One RCA call sends 8,000 tokens and receives&nbsp;800.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 200" role="img" aria-labelledby="f6-t f6-d">
+<title id="f6-t">Cost of one RCA call</title>
+<desc id="f6-d">Standard $0.0240; with 2,000 cached tokens $0.0202; Batch API plus caching $0.0101.</desc>
+<text class="s-tb" x="24" y="30">One RCA call: 8,000 tokens in, 800 out</text>
+<text class="s-t" x="24" y="69">Standard</text>
+<rect class="s-bar-a" x="190" y="52" width="253" height="26"/>
+<rect class="s-bar-w" x="443" y="52" width="127" height="26"/>
+<text class="s-tb" x="582" y="70">$0.0240</text>
+<text class="s-t" x="24" y="111">2,000 tokens cached</text>
+<rect class="s-bar-a" x="190" y="94" width="193" height="26"/>
+<rect class="s-bar-w" x="383" y="94" width="127" height="26"/>
+<text class="s-tb" x="522" y="112">$0.0202</text>
+<text class="s-t" x="24" y="153">Batch API + cached</text>
+<rect class="s-bar-a" x="190" y="136" width="97" height="26"/>
+<rect class="s-bar-w" x="287" y="136" width="63" height="26"/>
+<text class="s-tb" x="362" y="154">$0.0101</text>
+<rect class="s-bar-a" x="190" y="176" width="12" height="12"/>
+<text class="s-ts" x="208" y="186">Input</text>
+<rect class="s-bar-w" x="260" y="176" width="12" height="12"/>
+<text class="s-ts" x="278" y="186">Output</text>
+</svg>
+</div>
+<figcaption>Figure 7. Standard: 8,000 × $2 ÷ 1M + 800 × $10 ÷ 1M = $0.016 + $0.008. A cached prefix costs $0.10 per million, and the Batch API halves everything for work nobody waits&nbsp;on.</figcaption>
+</figure>
+
+<p>Once the Analyst and Critic loop is built, a ticket that takes three calls will cost 3 × $0.024 = $0.072. Money is not the hard limit, though. The hard limit is how much Anthropic lets one account send per minute.</p>
+
+<h3>What a rate limit is</h3>
+<p>Anthropic's servers are shared by every customer, so each account gets a fixed share per minute. On the starting tier, Claude Sonnet 5.5 allows three amounts per minute, and a request goes through only if it fits all three. Table 2 lists them, with the same number spread over a second.</p>
+
+<div class="table-wrap">
+<table>
+<caption>Table 2. Start-tier limits for Claude Sonnet 5.5</caption>
+<thead><tr><th>What is counted</th><th class="num">Per minute</th><th class="num">Per second</th></tr></thead>
+<tbody>
+<tr><td>Requests</td><td class="num">1,000</td><td class="num">16.7</td></tr>
+<tr><td>Input tokens: everything I send</td><td class="num">2,000,000</td><td class="num">33,333</td></tr>
+<tr><td>Output tokens: everything Claude writes</td><td class="num">400,000</td><td class="num">6,667</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Anthropic enforces each amount like a bucket of tokens. The bucket refills a little every second instead of resetting once a minute, and every call takes tokens out. Figure 8 follows the input-token bucket through one cycle.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 200" role="img" aria-labelledby="f7a-t f7a-d">
+<title id="f7a-t">How the input-token bucket works</title>
+<desc id="f7a-d">The bucket refills 33,333 tokens every second up to 2,000,000; each call takes its input tokens; when not enough is left, the API answers HTTP 429.</desc>
+<defs><marker id="m-h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#7A8088" stroke-width="1.6"/></marker></defs>
+<rect class="s-box" x="40" y="20" width="270" height="56" rx="5"/>
+<text class="s-tb" x="175" y="43" text-anchor="middle">1. Refill</text>
+<text class="s-ts" x="175" y="62" text-anchor="middle">+33,333 tokens every second</text>
+<rect class="s-acc" x="370" y="20" width="270" height="56" rx="5"/>
+<text class="s-tb" x="505" y="43" text-anchor="middle">2. The bucket</text>
+<text class="s-ts" x="505" y="62" text-anchor="middle">holds at most 2,000,000 tokens</text>
+<rect class="s-box" x="370" y="120" width="270" height="56" rx="5"/>
+<text class="s-tb" x="505" y="143" text-anchor="middle">3. Each call takes its input</text>
+<text class="s-ts" x="505" y="162" text-anchor="middle">one RCA call takes 8,000 tokens</text>
+<rect class="s-warn" x="40" y="120" width="270" height="56" rx="5"/>
+<text class="s-tb" x="175" y="143" text-anchor="middle">4. Not enough left?</text>
+<text class="s-ts" x="175" y="162" text-anchor="middle">HTTP 429: wait, then retry</text>
+<line class="s-line" x1="310" y1="48" x2="366" y2="48" marker-end="url(#m-h)"/>
+<line class="s-line" x1="505" y1="76" x2="505" y2="116" marker-end="url(#m-h)"/>
+<line class="s-line" x1="370" y1="148" x2="314" y2="148" marker-end="url(#m-h)"/>
+</svg>
+</div>
+<figcaption>Figure 8. A 429 answer means "too many requests". It usually carries a <code>retry-after</code> header with the seconds to wait, and Spring AI can retry the call&nbsp;automatically.</figcaption>
+</figure>
+
+<h3>What it means for KanbanAssist</h3>
+<p>For live tickets the limit never matters. One ticket through a three-call loop sends 3 × 8,000 = 24,000 input tokens, which is 1.2 percent of a minute's 2,000,000. My planned evaluation is different, because it replays hundreds of closed tickets in one go. Figure 9 shows what happens if I send 300 of them at the same moment, and three ways around it.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 230" role="img" aria-labelledby="f7b-t f7b-d">
+<title id="f7b-t">A planned evaluation against the input limit</title>
+<desc id="f7b-d">300 tickets times 8,000 tokens is 2,400,000, which is 400,000 over the 2,000,000 limit, so 50 calls are rejected. Fixes: pace calls, cache the fixed prefix, or use the Batch API.</desc>
+<defs><marker id="m-i" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#7A8088" stroke-width="1.6"/></marker></defs>
+<rect class="s-warn" x="40" y="20" width="600" height="56" rx="5"/>
+<text class="s-tb" x="340" y="43" text-anchor="middle">Planned evaluation: 300 tickets sent at once</text>
+<text class="s-ts" x="340" y="62" text-anchor="middle">300 × 8,000 = 2,400,000 tokens, 400,000 over the limit: 400,000 ÷ 8,000 = 50 calls rejected</text>
+<path class="s-line" d="M340 76 V100 H134 V124" marker-end="url(#m-i)"/>
+<line class="s-line" x1="340" y1="100" x2="340" y2="124" marker-end="url(#m-i)"/>
+<path class="s-line" d="M340 100 H546 V124" marker-end="url(#m-i)"/>
+<rect class="s-box" x="40" y="128" width="188" height="72" rx="5"/>
+<text class="s-tb" x="134" y="151" text-anchor="middle">Send at refill pace</text>
+<text class="s-ts" x="134" y="170" text-anchor="middle">33,333 ÷ 8,000 = 4.17 calls/s</text>
+<text class="s-ts" x="134" y="187" text-anchor="middle">300 calls in 72 s</text>
+<rect class="s-box" x="246" y="128" width="188" height="72" rx="5"/>
+<text class="s-tb" x="340" y="151" text-anchor="middle">Cache the fixed part</text>
+<text class="s-ts" x="340" y="170" text-anchor="middle">cached tokens are not counted</text>
+<text class="s-ts" x="340" y="187" text-anchor="middle">300 × 6,000 = 1,800,000</text>
+<rect class="s-box" x="452" y="128" width="188" height="72" rx="5"/>
+<text class="s-tb" x="546" y="151" text-anchor="middle">Use the Batch API</text>
+<text class="s-ts" x="546" y="170" text-anchor="middle">one job, own queue</text>
+<text class="s-ts" x="546" y="187" text-anchor="middle">half price, done within 24 h</text>
+</svg>
+</div>
+<figcaption>Figure 9. Caching works because the first 2,000 tokens of every RCA call, the instructions and tool definitions, are identical. Only the 6,000 tokens of tickets change from call to&nbsp;call.</figcaption>
+</figure>
+
+<p>My laptop has no rate limit, but it has a ceiling of its own: one GPU answers one request at a time, because a second KV cache does not fit in its memory. At my measured 9.82 seconds for one short answer, 300 tickets in a row would take 300 × 9.82 = 2,946 seconds, or 49 minutes, and full RCA prompts would take longer&nbsp;still.</p>
+
+<h2 id="embeddings">6. Embeddings stay local</h2>
+<p>Anthropic has no embedding model, and it does not need one here. Retrieval and generation meet only at plain text, so each side can use a different&nbsp;provider.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 236" role="img" aria-labelledby="f8-t f8-d">
+<title id="f8-t">Retrieval and generation are separate</title>
+<desc id="f8-d">The embedding model and pgvector find similar tickets; only their text reaches Claude.</desc>
+<defs><marker id="m-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#7A8088" stroke-width="1.6"/></marker></defs>
+<text class="s-tb" x="24" y="30">Retrieval, local</text>
+<rect class="s-box" x="24" y="44" width="152" height="52" rx="5"/>
+<text class="s-t" x="100" y="75" text-anchor="middle">New ticket text</text>
+<rect class="s-acc" x="216" y="44" width="200" height="52" rx="5"/>
+<text class="s-tb" x="316" y="66" text-anchor="middle">nomic-embed-text</text>
+<text class="s-ts" x="316" y="84" text-anchor="middle">Ollama, 768 numbers</text>
+<rect class="s-acc" x="456" y="44" width="200" height="52" rx="5"/>
+<text class="s-tb" x="556" y="66" text-anchor="middle">pgvector search</text>
+<text class="s-ts" x="556" y="84" text-anchor="middle">top 5 similar tickets</text>
+<line class="s-line" x1="176" y1="70" x2="212" y2="70" marker-end="url(#m-c)"/>
+<line class="s-line" x1="416" y1="70" x2="452" y2="70" marker-end="url(#m-c)"/>
+<text class="s-tb" x="24" y="140">Generation, Claude</text>
+<rect class="s-box" x="24" y="154" width="236" height="52" rx="5"/>
+<text class="s-t" x="142" y="176" text-anchor="middle">Ticket text + 5 tickets</text>
+<text class="s-ts" x="142" y="194" text-anchor="middle">plain text, no vectors</text>
+<rect class="s-warn" x="300" y="154" width="160" height="52" rx="5"/>
+<text class="s-tb" x="380" y="176" text-anchor="middle">Claude</text>
+<text class="s-ts" x="380" y="194" text-anchor="middle">Sonnet 5.5</text>
+<rect class="s-box" x="500" y="154" width="156" height="52" rx="5"/>
+<text class="s-t" x="578" y="185" text-anchor="middle">RCA answer</text>
+<path class="s-line" d="M556 96 V122 H210 V150" marker-end="url(#m-c)"/>
+<line class="s-line" x1="260" y1="180" x2="296" y2="180" marker-end="url(#m-c)"/>
+<line class="s-line" x1="460" y1="180" x2="496" y2="180" marker-end="url(#m-c)"/>
+</svg>
+</div>
+<figcaption>Figure 10. Claude never sees a vector. The chat model can change without touching a single stored&nbsp;embedding.</figcaption>
+</figure>
+
+<p>Vectors from different embedding models never mix. Each model learns its own coordinate system, so a 768-number nomic vector and a 1,024-number Voyage vector for the same sentence share no meaning, and switching models means re-embedding every stored ticket. Embedding models are also small, frequent and close in quality to paid APIs, which makes them the clearest case where a local model&nbsp;wins.</p>
+
+<h2 id="switch">7. What the switch changed</h2>
+<p>The application code did not change. Everything happened in&nbsp;configuration.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 190" role="img" aria-labelledby="f10-t f10-d">
+<title id="f10-t">Files touched by the switch</title>
+<desc id="f10-d">pom.xml gained one starter, anthropic.yml is new, application.yml gained one import and two keys, .env gained four keys; application code is unchanged.</desc>
+<defs><marker id="m-e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#7A8088" stroke-width="1.6"/></marker></defs>
+<rect class="s-box" x="34" y="20" width="140" height="56" rx="5"/>
+<text class="s-tbm" x="104" y="43" text-anchor="middle">pom.xml</text>
+<text class="s-ts" x="104" y="62" text-anchor="middle">+1 starter</text>
+<rect class="s-box" x="191" y="20" width="140" height="56" rx="5"/>
+<text class="s-tbm" x="261" y="43" text-anchor="middle">anthropic.yml</text>
+<text class="s-ts" x="261" y="62" text-anchor="middle">new file</text>
+<rect class="s-box" x="348" y="20" width="140" height="56" rx="5"/>
+<text class="s-tbm" x="418" y="43" text-anchor="middle">application.yml</text>
+<text class="s-ts" x="418" y="62" text-anchor="middle">+1 import, 2 keys</text>
+<rect class="s-box" x="505" y="20" width="140" height="56" rx="5"/>
+<text class="s-tbm" x="575" y="43" text-anchor="middle">.env</text>
+<text class="s-ts" x="575" y="62" text-anchor="middle">+4 keys</text>
+<path class="s-line" d="M104 76 V100 H575 V76"/>
+<line class="s-line" x1="340" y1="100" x2="340" y2="122" marker-end="url(#m-e)"/>
+<rect class="s-acc" x="190" y="126" width="300" height="44" rx="5"/>
+<text class="s-tb" x="340" y="153" text-anchor="middle">Java code: unchanged</text>
+</svg>
+</div>
+<figcaption>Figure 11. One dependency, one new file, one import line and four environment&nbsp;keys.</figcaption>
+</figure>
+
+<p>The two properties that matter sit in <code>application.yml</code>. Both read from <code>.env</code> with no default, so a missing key stops the application at startup and names the key, instead of running on a hidden&nbsp;fallback.</p>
+<pre><code>spring:
+  ai:
+    model:
+      chat: ${CHAT_PROVIDER}             # anthropic
+      embedding: ${EMBEDDING_PROVIDER}   # ollama
+
+# config/anthropic.yml
+spring:
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+      chat:
+        options:
+          model: ${ANTHROPIC_CHAT_MODEL}  # claude-sonnet-5-5
+          max-tokens: 2048</code></pre>
+
+<h2 id="spring">8. How Spring Boot picks the model</h2>
+<p>Nothing in my code names Ollama or Anthropic. Each starter JAR lists its auto-configuration classes in a file named <code>AutoConfiguration.imports</code>, and each class runs only when the property <code>spring.ai.model.chat</code> names its&nbsp;provider.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 420" role="img" aria-labelledby="f11-t f11-d">
+<title id="f11-t">Auto-configuration loading flow</title>
+<desc id="f11-d">Starter JARs list auto-configuration classes; the condition on spring.ai.model.chat creates AnthropicChatModel and skips OllamaChatModel; ChatClient.Builder wraps the one ChatModel and is injected into the controller.</desc>
+<defs><marker id="m-f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#7A8088" stroke-width="1.6"/></marker></defs>
+<rect class="s-box" x="140" y="20" width="400" height="56" rx="5"/>
+<text class="s-tb" x="340" y="43" text-anchor="middle">Starter JARs on the classpath</text>
+<text class="s-tm" x="340" y="63" text-anchor="middle">...AutoConfiguration.imports</text>
+<line class="s-line" x1="340" y1="76" x2="340" y2="104" marker-end="url(#m-f)"/>
+<rect class="s-box" x="140" y="108" width="400" height="56" rx="5"/>
+<text class="s-tb" x="340" y="131" text-anchor="middle">Spring checks each class's condition</text>
+<text class="s-tm" x="340" y="151" text-anchor="middle">spring.ai.model.chat=anthropic</text>
+<path class="s-line" d="M260 164 V192 H150 V216" marker-end="url(#m-f)"/>
+<path class="s-line" d="M420 164 V192 H530 V216" marker-end="url(#m-f)"/>
+<rect class="s-acc" x="40" y="220" width="220" height="56" rx="5"/>
+<text class="s-tb" x="150" y="243" text-anchor="middle">AnthropicChatModel</text>
+<text class="s-ts" x="150" y="263" text-anchor="middle">condition matches: created</text>
+<rect class="s-warn" x="420" y="220" width="220" height="56" rx="5" stroke-dasharray="6 4"/>
+<text class="s-tb" x="530" y="243" text-anchor="middle">OllamaChatModel</text>
+<text class="s-ts" x="530" y="263" text-anchor="middle">condition fails: skipped</text>
+<line class="s-line" x1="150" y1="276" x2="150" y2="304" marker-end="url(#m-f)"/>
+<rect class="s-box" x="40" y="308" width="220" height="56" rx="5"/>
+<text class="s-tb" x="150" y="331" text-anchor="middle">ChatClient.Builder</text>
+<text class="s-ts" x="150" y="351" text-anchor="middle">wraps the one ChatModel</text>
+<line class="s-line" x1="260" y1="336" x2="296" y2="336" marker-end="url(#m-f)"/>
+<rect class="s-box" x="300" y="308" width="340" height="56" rx="5"/>
+<text class="s-tb" x="470" y="331" text-anchor="middle">Investigation code</text>
+<text class="s-ts" x="470" y="351" text-anchor="middle">receives the builder; unchanged</text>
+<text class="s-ts" x="40" y="400">Dashed border: on the classpath but not created.</text>
+</svg>
+</div>
+<figcaption>Figure 12. One property decides which bean exists. With <code>CHAT_PROVIDER=ollama</code>, the two middle boxes swap and nothing below them&nbsp;changes.</figcaption>
+</figure>
+
+<p>At run time, the same interface call becomes two different HTTP requests. Spring AI translates the prompt into each provider's format and converts both replies back into one <code>ChatResponse</code>&nbsp;object.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 330" role="img" aria-labelledby="f12-t f12-d">
+<title id="f12-t">One call, two wire formats</title>
+<desc id="f12-d">chatClient.call() goes through OllamaChatModel to localhost:11434/api/chat, or through AnthropicChatModel to api.anthropic.com/v1/messages; both return a ChatResponse.</desc>
+<defs><marker id="m-g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#7A8088" stroke-width="1.6"/></marker></defs>
+<rect class="s-box" x="170" y="20" width="340" height="44" rx="5"/>
+<text class="s-tm" x="340" y="47" text-anchor="middle">chatClient.prompt()...call()</text>
+<path class="s-line" d="M290 64 V82 H174 V96" marker-end="url(#m-g)"/>
+<path class="s-line" d="M390 64 V82 H506 V96" marker-end="url(#m-g)"/>
+<rect class="s-warn" x="24" y="100" width="300" height="44" rx="5" stroke-dasharray="6 4"/>
+<text class="s-tb" x="174" y="127" text-anchor="middle">OllamaChatModel</text>
+<rect class="s-acc" x="356" y="100" width="300" height="44" rx="5"/>
+<text class="s-tb" x="506" y="127" text-anchor="middle">AnthropicChatModel</text>
+<line class="s-line" x1="174" y1="144" x2="174" y2="164" marker-end="url(#m-g)"/>
+<line class="s-line" x1="506" y1="144" x2="506" y2="164" marker-end="url(#m-g)"/>
+<rect class="s-box" x="24" y="168" width="300" height="56" rx="5"/>
+<text class="s-tm" x="174" y="191" text-anchor="middle">POST localhost:11434/api/chat</text>
+<text class="s-ts" x="174" y="210" text-anchor="middle">system prompt inside messages</text>
+<rect class="s-box" x="356" y="168" width="300" height="56" rx="5"/>
+<text class="s-tm" x="506" y="191" text-anchor="middle">POST api.anthropic.com/v1/messages</text>
+<text class="s-ts" x="506" y="210" text-anchor="middle">system field, max_tokens, API key</text>
+<path class="s-line" d="M174 224 V244 H290 V258" marker-end="url(#m-g)"/>
+<path class="s-line" d="M506 224 V244 H390 V258" marker-end="url(#m-g)"/>
+<rect class="s-box" x="170" y="262" width="340" height="44" rx="5"/>
+<text class="s-tm" x="340" y="289" text-anchor="middle">ChatResponse → .content()</text>
+</svg>
+</div>
+<figcaption>Figure 13. Two request shapes and two reply shapes, hidden behind one interface. The dashed path is the one switched&nbsp;off.</figcaption>
+</figure>
+
+
+<h2 id="where">9. Where a local model is the right call</h2>
+<p>Companies do run models on their own hardware, usually self-hosted in their cloud account with a serving engine such as vLLM rather than Ollama on a laptop. Figure 14 is the decision I would apply to any single step of an AI&nbsp;system.</p>
+
+<figure>
+<div class="fig">
+<svg viewBox="0 0 680 340" role="img" aria-labelledby="f9-t f9-d">
+<title id="f9-t">Where should this step run?</title>
+<desc id="f9-d">Data must stay inside: self-hosted. Narrow, very high volume: small local model. Offline: on-device. Otherwise: frontier model first, then move passing steps down.</desc>
+<defs><marker id="m-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#7A8088" stroke-width="1.6"/></marker></defs>
+<rect class="s-box" x="40" y="20" width="300" height="48" rx="5"/>
+<text class="s-t" x="190" y="49" text-anchor="middle">Must the data stay in your network?</text>
+<rect class="s-box" x="40" y="100" width="300" height="48" rx="5"/>
+<text class="s-t" x="190" y="129" text-anchor="middle">Narrow task at very high volume?</text>
+<rect class="s-box" x="40" y="180" width="300" height="48" rx="5"/>
+<text class="s-t" x="190" y="209" text-anchor="middle">Must it work offline?</text>
+<rect class="s-warn" x="40" y="260" width="300" height="56" rx="5"/>
+<text class="s-tb" x="190" y="283" text-anchor="middle">Frontier model first</text>
+<text class="s-ts" x="190" y="302" text-anchor="middle">prove the task, build an evaluation</text>
+<rect class="s-acc" x="400" y="20" width="240" height="48" rx="5"/>
+<text class="s-tb" x="520" y="40" text-anchor="middle">Self-hosted model</text>
+<text class="s-ts" x="520" y="58" text-anchor="middle">vLLM or private endpoint</text>
+<rect class="s-acc" x="400" y="100" width="240" height="48" rx="5"/>
+<text class="s-tb" x="520" y="120" text-anchor="middle">Small local model</text>
+<text class="s-ts" x="520" y="138" text-anchor="middle">embeddings, classification</text>
+<rect class="s-acc" x="400" y="180" width="240" height="48" rx="5"/>
+<text class="s-tb" x="520" y="200" text-anchor="middle">On-device model</text>
+<text class="s-ts" x="520" y="218" text-anchor="middle">phone, car, factory floor</text>
+<rect class="s-box" x="400" y="260" width="240" height="56" rx="5"/>
+<text class="s-tb" x="520" y="283" text-anchor="middle">Move passing steps down</text>
+<text class="s-ts" x="520" y="302" text-anchor="middle">only where the eval holds</text>
+<line class="s-line" x1="340" y1="44" x2="396" y2="44" marker-end="url(#m-d)"/>
+<line class="s-line" x1="340" y1="124" x2="396" y2="124" marker-end="url(#m-d)"/>
+<line class="s-line" x1="340" y1="204" x2="396" y2="204" marker-end="url(#m-d)"/>
+<line class="s-line" x1="340" y1="288" x2="396" y2="288" marker-end="url(#m-d)"/>
+<text class="s-ts" x="368" y="36" text-anchor="middle">yes</text>
+<text class="s-ts" x="368" y="116" text-anchor="middle">yes</text>
+<text class="s-ts" x="368" y="196" text-anchor="middle">yes</text>
+<line class="s-line" x1="190" y1="68" x2="190" y2="96" marker-end="url(#m-d)"/>
+<line class="s-line" x1="190" y1="148" x2="190" y2="176" marker-end="url(#m-d)"/>
+<line class="s-line" x1="190" y1="228" x2="190" y2="256" marker-end="url(#m-d)"/>
+<text class="s-ts" x="200" y="87">no</text>
+<text class="s-ts" x="200" y="167">no</text>
+<text class="s-ts" x="200" y="247">no</text>
+</svg>
+</div>
+<figcaption>Figure 14. KanbanAssist lands in two boxes: embeddings in "small local model", reasoning in "frontier model&nbsp;first".</figcaption>
+</figure>
+
+<p>Sending tickets to Claude also means their text leaves my machine, including any log line or secret pasted into a comment. Redacting secrets before the call, and reading the provider's data-retention terms, belongs in the first question of Figure&nbsp;14.</p>
+
+<h2 id="learned">What I learned</h2>
+<p>Running a model on a 4 GB GPU taught me more about how models run than any course, and it also showed me where that lesson ends. These are the points I would carry into any AI system:</p>
+<ul>
+<li>A small GPU is limited by memory, not by compute. My card held 80 percent of the model, so it wrote 15.9 tokens per&nbsp;second.</li>
+<li>A model's advertised context is not the context you get. Mine was trained for 262,144 tokens, and my card held about&nbsp;6,800.</li>
+<li>For an agent, quality per step matters more than speed per token. A weak model turns every failure into a guess between my prompt, my code and the&nbsp;model.</li>
+<li>Local still wins where the task is small and frequent. My embeddings never left the laptop, and the stored vectors did not change when the chat model&nbsp;did.</li>
+<li>With Spring AI, the model is configuration. One property decided whether Ollama or Claude answered, and my Java code never&nbsp;knew.</li>
+</ul>
+<div class="rule-box"><strong>The rule I ended up with</strong>Run a model locally when the data cannot leave your network, when the task is narrow and very high-volume, or when the system must work offline. Otherwise, prove the task on a frontier model first, and move steps to a smaller model only when an evaluation shows they still&nbsp;pass.</div>
+<p>KanbanAssist now reasons with Claude Sonnet 5.5 and embeds locally with <code>nomic-embed-text</code>. My next step is an automated evaluation over closed tickets, so that every change to the agent, and any future move of a step back to a smaller model, is decided by a score instead of by how an answer&nbsp;feels.</p>
+
+<h2 id="sources">Sources</h2>
+<ul class="sources">
+<li><a href="https://platform.claude.com/docs/en/about-claude/models/overview">Anthropic: Models&nbsp;overview</a></li>
+<li><a href="https://platform.claude.com/docs/en/about-claude/pricing">Anthropic:&nbsp;Pricing</a></li>
+<li><a href="https://platform.claude.com/docs/en/api/rate-limits">Anthropic: Rate&nbsp;limits</a></li>
+<li><a href="https://platform.claude.com/docs/en/build-with-claude/embeddings">Anthropic:&nbsp;Embeddings</a></li>
+<li><a href="https://huggingface.co/Qwen/Qwen3-4B-Instruct-2507">Qwen3-4B-Instruct-2507 model&nbsp;card</a></li>
+<li><a href="https://springdoc.cn/spring-ai/api/chat/anthropic-chat.html">Spring AI: Anthropic Chat&nbsp;reference</a></li>
+<li><a href="https://anotherwrapper.com/llm-pricing/claude-sonnet-5-5">Claude Sonnet 5.5 output speed, measured by a third&nbsp;party</a></li>
+</ul>
+</article>
+<footer>Vishnu Vardhan · <a href="/">vishnuvardhan.io</a></footer>
+</main>
+
+
+<script>
+/* Visitor count: counts each browser once; skips the owner's browsers (?me) and non-production hosts. */
+(function(){try{var p=new URLSearchParams(location.search);if(p.has("me")){if(p.get("me")==="off")localStorage.removeItem("owner");else localStorage.setItem("owner","1");}
+if(location.hostname!=="vishnuvardhan.io"||localStorage.getItem("owner")||localStorage.getItem("counted"))return;
+fetch("https://visits.vishnuvardhan.io",{method:"POST"}).then(function(r){if(r.ok)localStorage.setItem("counted","1");}).catch(function(){});}catch(e){}})();
+</script>
+<!-- Cloudflare Web Analytics: cookieless page-view stats (countries, pages, referrers). -->
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "76707937b9244ea6a6f296c02f869675"}'></script>
+</body>
+</html>
