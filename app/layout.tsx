@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vishnu Vardhan — Java and Spring AI",
+  title: "Vishnu Vardhan",
   description:
-    "Vishnu Vardhan builds enterprise systems and AI on the JVM with Java, Spring, Kafka and PostgreSQL.",
+    "Software engineer working on systems architecture and AI on the JVM. Projects and articles by Vishnu Vardhan.",
   metadataBase: new URL("https://vishnuvardhan.io"),
   openGraph: {
-    title: "Vishnu Vardhan — Java and Spring AI",
-    description: "Java, Spring, Kafka, PostgreSQL, and Spring AI.",
+    title: "Vishnu Vardhan",
+    description: "Software engineer working on systems architecture and AI on the JVM.",
     url: "https://vishnuvardhan.io",
     type: "website",
   },
