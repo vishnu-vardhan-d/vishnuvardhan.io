@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ollama on a 4 GB GPU vs Claude · Vishnu Vardhan</title>
 <meta name="description" content="I ran my RCA assistant with Ollama on a 4 GB laptop GPU, measured where it ran out, and moved its reasoning to Claude while keeping embeddings local.">
+<link rel="canonical" href="https://vishnuvardhan.io/blog/ollama-or-claude">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Vishnu Vardhan">
+<meta property="og:title" content="Ollama on a 4 GB GPU vs Claude">
+<meta property="og:description" content="I ran my RCA assistant with Ollama on a 4 GB laptop GPU, measured where it ran out, and moved its reasoning to Claude while keeping embeddings local.">
+<meta property="og:url" content="https://vishnuvardhan.io/blog/ollama-or-claude">
+<meta property="og:image" content="https://vishnuvardhan.io/assets/portrait.png">
+<meta property="og:image:width" content="480">
+<meta property="og:image:height" content="480">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@DipEngineer">
 <style>
 /* Layout: one reading column (~720px) matching vishnuvardhan.io; blue marks the GPU and Claude path, amber marks memory pressure and the skipped bean. */
 :root{
@@ -647,6 +658,7 @@ spring:
 </main>
 
 
+<script src="/assets/share.js" defer></script>
 <script>
 /* Visitor count: counts each browser once; skips the owner's browsers (?me) and non-production hosts. */
 (function(){try{var p=new URLSearchParams(location.search);if(p.has("me")){if(p.get("me")==="off")localStorage.removeItem("owner");else localStorage.setItem("owner","1");}

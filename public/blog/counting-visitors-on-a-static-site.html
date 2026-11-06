@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Counting Visitors on a Static Site · Vishnu Vardhan</title>
 <meta name="description" content="Why a static site on GitHub Pages can't count visitors, and how a Cloudflare Worker and a KV store count them without storing IP addresses.">
+<link rel="canonical" href="https://vishnuvardhan.io/blog/counting-visitors-on-a-static-site">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Vishnu Vardhan">
+<meta property="og:title" content="Counting Visitors on a Static Site">
+<meta property="og:description" content="Why a static site on GitHub Pages can&#x27;t count visitors, and how a Cloudflare Worker and a KV store count them without storing IP addresses.">
+<meta property="og:url" content="https://vishnuvardhan.io/blog/counting-visitors-on-a-static-site">
+<meta property="og:image" content="https://vishnuvardhan.io/assets/portrait.png">
+<meta property="og:image:width" content="480">
+<meta property="og:image:height" content="480">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:creator" content="@DipEngineer">
 <style>
 body{margin:0;background:#fff;color:#333;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:17px;line-height:1.6}
 a{color:#1A55A6}a:hover{color:#0E3A75}
@@ -206,6 +217,7 @@ id = &quot;5160c8dadf2c476ca36de37bae721e75&quot;</pre>
 <li><a href="https://developers.cloudflare.com/workers/configuration/routing/custom-domains/">Workers custom domains</a>, for serving the Worker at <code>visits.vishnuvardhan.io</code>.</li>
 </ul>
 </article>
+<script src="/assets/share.js" defer></script>
 <script>
 /* Visitor count: counts each browser once; skips the owner's browsers (?me) and non-production hosts. */
 (function(){try{var p=new URLSearchParams(location.search);if(p.has("me")){if(p.get("me")==="off")localStorage.removeItem("owner");else localStorage.setItem("owner","1");}
