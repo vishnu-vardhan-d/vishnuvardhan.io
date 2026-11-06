@@ -5,7 +5,11 @@ import styles from "./page.module.css";
 import VisitCounter from "@/components/VisitCounter";
 import SocialIcons from "@/components/SocialIcons";
 import SkillChips from "@/components/SkillChips";
+import ArchitectureViewer from "@/components/ArchitectureViewer";
+import { raastapayArchitecture, kanbanAssistArchitecture } from "@/content/architecture";
 import { profile, skills, projects, articles, watches } from "@/content/profile";
+
+const architectures = { raastapay: raastapayArchitecture, kanbanassist: kanbanAssistArchitecture };
 
 export default function Home() {
   return (
@@ -58,11 +62,16 @@ export default function Home() {
                 <div className={styles.tlBody}>
                   <div className={styles.tlTitle}>
                     <b>{p.name}</b>
+                    {p.status && <span className={styles.projStatus}>{p.status}</span>}
                     {p.links.map((l) => (
                       <a key={l.href} className={styles.projLink} href={l.href}>{l.label}</a>
                     ))}
                   </div>
                   <p>{p.summary}</p>
+                  <ul className={styles.techList} aria-label={`${p.name} tech stack`}>
+                    {p.stack.map((t) => <li key={t}>{t}</li>)}
+                  </ul>
+                  {p.architecture && <ArchitectureViewer project={architectures[p.architecture]} />}
                 </div>
               </div>
             ))}

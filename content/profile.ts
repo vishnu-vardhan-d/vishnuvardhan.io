@@ -28,6 +28,9 @@ export type Project = {
   name: string;
   summary: string;
   links: { label: string; href: string }[];
+  status?: string;                              // shown as a pill beside the name
+  stack: string[];                              // every technology the project uses, from its build files
+  architecture?: "raastapay" | "kanbanassist";  // adds a "View architecture" button
 };
 
 export const projects: Project[] = [
@@ -36,6 +39,16 @@ export const projects: Project[] = [
     name: "KanbanAssist",
     summary: "An AI assistant that finds similar past tickets and drafts a root-cause\u00A0summary.",
     links: [],
+    status: "In development",
+    architecture: "kanbanassist",
+    stack: [
+      "Java 25", "Spring Boot 4.1", "Spring AI 2.0", "Spring AI MCP Client", "Model Context Protocol",
+      "Azure DevOps MCP Server", "Azure DevOps Service Hooks", "Ollama", "Qwen3 4B", "nomic-embed-text",
+      "Anthropic Claude", "PostgreSQL 16", "pgvector", "Hibernate Vector", "Spring Data JPA", "Spring JDBC",
+      "Flyway", "Apache Kafka 4 (KRaft)", "OpenTelemetry", "Langfuse", "Spring Boot Actuator",
+      "Cloudflare Tunnel", "Docker Compose", "NVIDIA GPU (WSL2)", "React 19", "TypeScript", "Vite",
+      "Tailwind CSS", "shadcn/ui", "assistant-ui", "Zustand", "Maven", "JUnit 5", "Python",
+    ],
   },
   {
     date: "Mar 2026",
@@ -45,12 +58,19 @@ export const projects: Project[] = [
       { label: "GitHub", href: "https://github.com/vishnu-vardhan-d/jamna.nn" },
       { label: "Docs", href: "https://vishnu-vardhan-d.github.io/jamna.nn/" },
     ],
+    stack: ["Java 11", "Pure Java, no libraries", "JUnit 5", "Maven", "GitHub Actions", "GitHub Pages"],
   },
   {
     date: "Nov 2025",
     name: "options-wall-street",
     summary: "Personal tooling for options\u00A0analysis.",
     links: [{ label: "GitHub", href: "https://github.com/vishnu-vardhan-d/options-wall-street" }],
+    stack: [
+      "Java 25", "Spring Boot 4.0", "Spring WebFlux", "Spring Security", "OAuth 2.0", "Spring Data JPA",
+      "Flyway", "PostgreSQL", "H2", "Apache Kafka", "Spring AI", "Anthropic Claude", "Spring AI MCP Server",
+      "Robinhood MCP", "JDA (Discord)", "ArchUnit", "Next.js 16", "React 18", "TypeScript", "Tailwind CSS",
+      "Lightweight Charts", "Pine Script", "Docker", "Azure", "Bicep", "Maven", "GitHub Actions",
+    ],
   },
   {
     date: "2023",
@@ -59,6 +79,14 @@ export const projects: Project[] = [
     links: [
       { label: "Website", href: "https://raastapay.in" },
       { label: "Docs", href: "https://raastapay.in/docs" },
+    ],
+    status: "MVP",
+    architecture: "raastapay",
+    stack: [
+      "Java 25", "Spring Boot 4.1", "Spring AI 2.0", "Anthropic Claude", "Spring for Apache Kafka",
+      "Apache Kafka 4.3 (KRaft)", "Kafdrop", "PostgreSQL 16", "pgAdmin", "Spring Data JPA", "Hibernate",
+      "Spring JDBC", "Flyway", "Spring Security", "Docker Compose", "Maven", "JUnit 5", "GitHub Actions",
+      "GitHub Pages",
     ],
   },
 ];
